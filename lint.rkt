@@ -103,9 +103,21 @@
              [c e ...+] ...)
            #:do [(track-problem! this-syntax "this cond expression does not have an else clause" )]))
 
+(define-syntax-class let-expression
+  #:datum-literals (let)
+  (pattern (let
+             (~do (push-scope!))
+             (~optional proc-id:define-identifier)
+             ([id:define-identifier e:expression] ...+)
+             (~do (push-scope!))
+             body:expression ...+
+             (~do (pop-scope!)
+                  (pop-scope!)))))
+
 (define-syntax-class expression
   (pattern d:definition)
   (pattern c:cond-expression)
+  (pattern l:let-expression)
   (pattern e))
 
 (define-syntax-class function-argument
@@ -142,6 +154,7 @@
 (define-syntax-class toplevel
   (pattern d:definition)
   (pattern c:cond-expression)
+  (pattern l:let-expression)
   (pattern e))
 
 (define-syntax-class module

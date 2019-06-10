@@ -1,0 +1,3 @@
+/Users/bogdan/sandbox/konmari/tests/lint/already-defined-let.rkt:4:8:error:identifier 'x' is already defined
+/Users/bogdan/sandbox/konmari/tests/lint/already-defined-let.rkt:8:13:error:identifier 'x' is already defined
+/Users/bogdan/sandbox/konmari/tests/lint/already-defined-let.rkt:13:10:error:identifier 'x' is already defined

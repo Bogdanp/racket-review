@@ -11,7 +11,8 @@ issues as quickly as it can.  As such, it does not expand the programs
 it lints.  It currently detects:
 
 * missing and invalid #lang headers
-* redefined identifiers
+* redefined identifiers via `define` and `define-values`
+* redefined identifiers inside `let`
 * `cond` expressions without an `else` clause
 
 ## Emacs/flycheck support
