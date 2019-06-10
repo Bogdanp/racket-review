@@ -1,1 +1,1 @@
-/Users/bogdan/sandbox/konmari/tests/lint/no-lang.rkt:1:0:warning:missing module (#lang) declaration
+/Users/bogdan/sandbox/konmari/tests/lint/no-lang.rkt:1:1:warning:missing module (#lang) declaration

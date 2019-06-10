@@ -11,6 +11,9 @@
 (define-runtime-path linter-tests
   (build-path "tests" "lint"))
 
+(define (indent s)
+  (~a "  " s))
+
 (for ([filename (directory-list linter-tests)]
       #:when (bytes=? (path-get-extension filename) #".rkt"))
   (define-values (in out) (make-pipe))
@@ -25,5 +28,9 @@
   (define expected-output (call-with-input-file (~a filepath ".out") port->lines))
 
   (unless (equal? command-output expected-output)
-    (displayln filename)
+    (displayln (~a "output differs when linting " filepath))
+    (displayln "expected:")
+    (for-each (compose1 displayln indent) expected-output)
+    (displayln "found:")
+    (for-each (compose1 displayln indent) command-output)
     (exit 1)))

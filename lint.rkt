@@ -4,6 +4,7 @@
          racket/file
          racket/function
          racket/port
+         racket/string
          syntax/modread
          syntax/parse)
 
@@ -20,16 +21,9 @@
 (define/contract (lint filename)
   (-> path-string? (listof problem?))
 
-  (cond
-    [(file->syntax filename)
-     => (lambda (stx)
-          (syntax-parse stx
-            [module:mod
-             #'module.name]
-
-            [e
-             (track-problem! stx "missing module (#lang) declaration")
-             #'e]))])
+  (define stx (file->syntax filename))
+  (when (and stx (not (eof-object? stx)))
+    (lint-syntax! stx))
 
   (current-problem-list))
 
@@ -46,7 +40,7 @@
                    (lambda (e)
                      (begin0 #f
                        (for ([loc (exn:fail:read-srclocs e)])
-                         (track-problem! loc (exn-message e) #:level 'error))))])
+                         (track-problem! loc (cadr (string-split (exn-message e) "read-syntax: ")) #:level 'error))))])
     (define-values (base _ __) (split-path filename))
     (parameterize ([current-load-relative-directory base]
                    [current-namespace (make-base-namespace)])
@@ -56,6 +50,15 @@
             (lambda (in)
               (port-count-lines! in)
               (read-syntax filename in))))))))
+
+(define (lint-syntax! stx)
+  (syntax-parse stx
+    [module:mod
+     #'module.name]
+
+    [e
+     (track-problem! stx "missing module (#lang) declaration")
+     #'e]))
 
 (define-syntax-class toplevel-expr
   (pattern e:expr))
