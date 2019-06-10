@@ -1,0 +1,1 @@
+/Users/bogdan/sandbox/konmari/tests/lint/partial-lang.rkt:1:0:error:tests/lint/partial-lang.rkt:1:0: read-syntax: expected a single space after `#lang`
