@@ -48,7 +48,7 @@
 
   (define problems (lint filename))
   (unless (null? problems)
-    (for-each report-problem problems)
+    (for-each report-problem (reverse problems))
     (exit 1)))
 
 (define ((handle-unknown command))

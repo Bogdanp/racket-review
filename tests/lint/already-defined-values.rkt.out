@@ -1,0 +1,7 @@
+/Users/bogdan/sandbox/konmari/tests/lint/already-defined-values.rkt:3:19:error:identifier 'a' is already defined
+/Users/bogdan/sandbox/konmari/tests/lint/already-defined-values.rkt:6:17:error:identifier 'a' is already defined
+/Users/bogdan/sandbox/konmari/tests/lint/already-defined-values.rkt:6:21:error:identifier '_' is already defined
+/Users/bogdan/sandbox/konmari/tests/lint/already-defined-values.rkt:9:17:error:identifier 'a' is already defined
+/Users/bogdan/sandbox/konmari/tests/lint/already-defined-values.rkt:9:19:error:identifier '_' is already defined
+/Users/bogdan/sandbox/konmari/tests/lint/already-defined-values.rkt:9:21:error:identifier '_' is already defined
+/Users/bogdan/sandbox/konmari/tests/lint/already-defined-values.rkt:10:21:error:identifier 'b' is already defined
