@@ -174,13 +174,19 @@
             e:expression ...+
             (~do (pop-scope!)))))
 
+(define-syntax-class provide-renamed-id
+  (pattern id:id)
+  (pattern e
+           #:do [(track-problem! #'e "not an identifier"
+                                 #:level 'error)]))
+
 (define-syntax-class provide-spec
   #:datum-literals (rename-out)
   (pattern id:id
            #:do [(track-provided! #'id)])
 
-  (pattern (rename-out [id0:id id1:id] ...)
-           #:do [(map track-provided! (syntax-e #'(id0 ...)))]))
+  (pattern (rename-out ~! [to-rename-id:id renamed-id:provide-renamed-id] ...)
+           #:do [(map track-provided! (syntax-e #'(to-rename-id ...)))]))
 
 (define-syntax-class provide-statement
   #:datum-literals (provide)

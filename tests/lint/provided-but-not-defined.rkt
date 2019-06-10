@@ -3,7 +3,8 @@
 (provide
  g
  (rename-out [h i]
-             [j k])
+             [j k]
+             [l 1])
  x)
 
 (define x 42)
