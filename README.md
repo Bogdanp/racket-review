@@ -12,6 +12,7 @@ it lints.  It currently detects:
 
 * missing and invalid #lang headers
 * redefined identifiers
+* `cond` expressions without an `else` clause
 
 ## Emacs/flycheck support
 

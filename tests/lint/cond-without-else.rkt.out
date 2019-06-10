@@ -1,0 +1,3 @@
+/Users/bogdan/sandbox/konmari/tests/lint/cond-without-else.rkt:5:1:warning:this cond expression does not have an else clause
+/Users/bogdan/sandbox/konmari/tests/lint/cond-without-else.rkt:9:3:warning:this cond expression does not have an else clause
+/Users/bogdan/sandbox/konmari/tests/lint/cond-without-else.rkt:13:3:warning:this cond expression does not have an else clause

@@ -94,9 +94,19 @@
                                    #:level 'error))
                  (track-binding! (syntax->datum #'id))]))
 
+(define-syntax-class cond-expression
+  #:datum-literals (cond else)
+  (pattern (cond
+             [c e ...+] ...
+             [else eE ...+]))
+  (pattern (cond
+             [c e ...+] ...)
+           #:do [(track-problem! this-syntax "this cond expression does not have an else clause" )]))
+
 (define-syntax-class expression
   (pattern d:definition)
-  (pattern e:expr))
+  (pattern c:cond-expression)
+  (pattern e))
 
 (define-syntax-class function-argument
   (pattern arg:define-identifier
@@ -125,14 +135,14 @@
            #:do [(track-binding! (syntax->datum #'name.id))])
 
   (pattern (define hdr:function-header
-             !~
              (~do (push-scope!))
              e:expression ...+
              (~do (pop-scope!)))))
 
 (define-syntax-class toplevel
   (pattern d:definition)
-  (pattern e:expr))
+  (pattern c:cond-expression)
+  (pattern e))
 
 (define-syntax-class module
   #:datum-literals (module module+ #%module-begin)
