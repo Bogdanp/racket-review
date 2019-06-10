@@ -127,10 +127,20 @@
              [c e ...+] ...)
            #:do [(track-problem! this-syntax "this cond expression does not have an else clause" )]))
 
+(define-syntax-class if-expression
+  #:datum-literals (begin if let)
+  (pattern (~or (if cond:expression
+                    ((~or begin let) e ...+)
+                    e-else:expression)
+                (if cond:expression
+                    e-then:expression
+                    ((~or begin let) e ...+)))
+           #:do [(track-problem! this-syntax "use a cond expression instead of nesting begin or let inside an if")]))
+
 (define-syntax-class let-expression
   #:datum-literals (let)
   (pattern (let
-             (~do (push-scope!))
+               (~do (push-scope!))
              (~optional proc-id:define-identifier)
              ([id:define-identifier e:expression] ...+)
              (~do (push-scope!))
@@ -201,6 +211,7 @@
   (pattern d:definition)
   (pattern s:struct-definition)
   (pattern c:cond-expression)
+  (pattern i:if-expression)
   (pattern l:let-expression)
   (pattern e))
 

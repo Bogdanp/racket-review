@@ -15,6 +15,7 @@ it lints.  It currently detects:
 * redefined identifiers inside `let`
 * identifiers that have been provided but not defined
 * `cond` expressions without an `else` clause
+* usages of `begin` and `let` inside an `if`
 
 ## Emacs/flycheck support
 
