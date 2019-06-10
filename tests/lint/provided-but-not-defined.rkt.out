@@ -1,0 +1,3 @@
+/Users/bogdan/sandbox/konmari/tests/lint/provided-but-not-defined.rkt:6:15:error:identifier 'j' provided but not defined
+/Users/bogdan/sandbox/konmari/tests/lint/provided-but-not-defined.rkt:5:15:error:identifier 'h' provided but not defined
+/Users/bogdan/sandbox/konmari/tests/lint/provided-but-not-defined.rkt:4:2:error:identifier 'g' provided but not defined

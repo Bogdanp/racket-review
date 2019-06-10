@@ -6,6 +6,7 @@
          racket/function
          racket/port
          racket/string
+         racket/syntax
          syntax/modread
          syntax/parse)
 
@@ -13,11 +14,11 @@
  (struct-out problem)
  lint)
 
-(define current-problem-list
-  (make-parameter null))
-
 (struct problem (stx level message solution)
   #:transparent)
+
+(define current-problem-list
+  (make-parameter null))
 
 (define/contract (lint filename)
   (-> path-string? (listof problem?))
@@ -55,11 +56,15 @@
 (define (lint-syntax! stx)
   (syntax-parse stx
     [module:module
+     (check-provided-bindings!)
      #'module]
 
     [e
      (track-problem! stx "missing module (#lang) declaration")
      #'e]))
+
+
+;; scope ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (struct scope (parent bindings)
   #:transparent)
@@ -86,6 +91,25 @@
 
 (define (track-binding! name)
   (hash-set! (scope-bindings (current-scope)) name 'current-module))
+
+
+;; provide ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define provided-bindings
+  (make-parameter null))
+
+(define (track-provided! name)
+  (provided-bindings (cons name (provided-bindings))))
+
+(define (check-provided-bindings!)
+  (for ([binding:stx (provided-bindings)])
+    (define binding:id (syntax->datum binding:stx))
+    (unless (name-bound? binding:id)
+      (track-problem! binding:stx (~a "identifier '" binding:id "' provided but not defined")
+                      #:level 'error))))
+
+
+;; rules ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-syntax-class define-identifier
   (pattern id:id
@@ -114,12 +138,6 @@
              (~do (pop-scope!)
                   (pop-scope!)))))
 
-(define-syntax-class expression
-  (pattern d:definition)
-  (pattern c:cond-expression)
-  (pattern l:let-expression)
-  (pattern e))
-
 (define-syntax-class function-argument
   (pattern arg:define-identifier
            #:do [(track-binding! (syntax->datum #'arg.id))]))
@@ -133,6 +151,9 @@
                                 (~do (pop-scope!)))
            #:attr name (attribute fun.name)))
 
+(define-syntax-class define-like
+  (pattern id:id #:when (string-prefix? (symbol->string (syntax-e #'id)) "define/")))
+
 (define-syntax-class definition
   #:datum-literals (define-values define)
   (pattern (define-values (name:define-identifier ...+)
@@ -141,21 +162,45 @@
              e:expression ...+
              (~do (pop-scope!))))
 
-  (pattern (define name:define-identifier
-             ~!
-             e:expression ...+)
+  (pattern ((~or define _:define-like)
+            name:define-identifier
+            ~!
+            e:expression ...+)
            #:do [(track-binding! (syntax->datum #'name.id))])
 
-  (pattern (define hdr:function-header
-             (~do (push-scope!))
-             e:expression ...+
-             (~do (pop-scope!)))))
+  (pattern ((~or define _:define-like)
+            hdr:function-header
+            (~do (push-scope!))
+            e:expression ...+
+            (~do (pop-scope!)))))
 
-(define-syntax-class toplevel
+(define-syntax-class provide-spec
+  #:datum-literals (rename-out)
+  (pattern id:id
+           #:do [(track-provided! #'id)])
+
+  (pattern (rename-out [id0:id id1:id] ...)
+           #:do [(map track-provided! (syntax-e #'(id0 ...)))]))
+
+(define-syntax-class provide-statement
+  #:datum-literals (provide)
+  (pattern (provide e:provide-spec ...+)))
+
+(define-syntax-class struct-definition
+  #:datum-literals (struct struct++)
+  (pattern ((~or struct struct++) name:define-identifier e ...)
+           #:do [(track-binding! (syntax->datum (format-id #'name "~a?" (syntax-e #'name))))]))
+
+(define-syntax-class expression
   (pattern d:definition)
+  (pattern s:struct-definition)
   (pattern c:cond-expression)
   (pattern l:let-expression)
   (pattern e))
+
+(define-syntax-class toplevel
+  (pattern p:provide-statement)
+  (pattern e:expression))
 
 (define-syntax-class module
   #:datum-literals (module module+ #%module-begin)
