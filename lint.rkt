@@ -137,4 +137,4 @@
 (define-syntax-class module
   #:datum-literals (module module+ #%module-begin)
   (pattern ((~or module module+) name:id path:id
-             (#%module-begin e:toplevel ...))))
+                                 (#%module-begin e:toplevel ...))))

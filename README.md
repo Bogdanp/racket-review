@@ -4,6 +4,15 @@
 will, anyway, right now it doesn't do much and you shouldn't be using
 it.
 
+## Linting
+
+`konmari` performs surface-level linting with the intent of finding
+issues as quickly as it can.  As such, it does not expand the programs
+it lints.  It currently detects:
+
+* missing and invalid #lang headers
+* redefined identifiers
+
 ## Emacs/flycheck support
 
 Add the following snippet to your `init.el` to define a Flycheck
