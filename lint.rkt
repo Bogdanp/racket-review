@@ -161,24 +161,24 @@
 
   (string->symbol (apply format fmt args:strs)))
 
-(define-syntax-class application
+(define-syntax-class application-expression
   (pattern (e0:expression ~! e:expression ...)))
 
-(define-syntax-class identifier
+(define-syntax-class identifier-expression
   (pattern id:id
            #:do [(track-binding-usage! (format-binding "~a" #'id))]))
 
-(define-syntax-class define-identifier
-  (pattern id:id
-           #:do [(cond
-                   [(name-bound-in-current-scope? (syntax->datum #'id))
-                    (track-problem! #'id (~a "identifier '" (syntax->datum #'id) "' is already defined")
-                                    #:level 'error)]
+(define-syntax-class lambda-expression
+  #:datum-literals (lambda)
+  (pattern (lambda args:define-identifier
+             (~do (push-scope!))
+             e0:expression ...+
+             (~do (pop-scope!))))
 
-                   [(name-bound? (syntax->datum #'id))
-                    (track-problem! #'id (~a "identifier '" (syntax->datum #'id) "' shadows an earlier binding"))])
-
-                 (track-binding! #'id)]))
+  (pattern (lambda (arg:function-argument ...)
+             (~do (push-scope!))
+             e1:expression ...+
+             (~do (pop-scope!)))))
 
 (define-syntax-class cond-expression
   #:datum-literals (=> cond else)
@@ -203,6 +203,19 @@
                e-then:expression)
            #:do [(track-problem! this-syntax "if expressions must contain one expression for the then-branch and another for the else-branch"
                                  #:level 'error)]))
+
+(define-syntax-class define-identifier
+  (pattern id:id
+           #:do [(cond
+                   [(name-bound-in-current-scope? (syntax->datum #'id))
+                    (track-problem! #'id (~a "identifier '" (syntax->datum #'id) "' is already defined")
+                                    #:level 'error)]
+
+                   [(name-bound? (syntax->datum #'id))
+                    (unless (underscores? (syntax->datum #'id))
+                      (track-problem! #'id (~a "identifier '" (syntax->datum #'id) "' shadows an earlier binding")))])
+
+                 (track-binding! #'id)]))
 
 (define-syntax-class define-let-identifier
   (pattern (id:id e:expression)
@@ -230,8 +243,11 @@
                                    #:level 'error))]))
 
 (define-syntax-class function-argument
-  (pattern arg:define-identifier
-           #:do [(track-binding! #'arg.id)]))
+  (pattern arg:define-identifier)
+  (pattern [arg:define-identifier default:expression])
+
+  ;; TODO: keyword arguments.
+  (pattern _))
 
 (define-syntax-class function-header
   (pattern fun:define-identifier
@@ -308,7 +324,7 @@
   (pattern (struct++
              ~!
              name:define-struct-identifier
-             (~optional super-id:identifier)
+             (~optional super-id:identifier-expression)
              (spec:struct++-spec ...)
              e ...)
            #:do [(track-binding! #'name "~a++")
@@ -322,11 +338,12 @@
 (define-syntax-class expression
   (pattern d:definition)
   (pattern s:struct-definition)
+  (pattern l:lambda-expression)
   (pattern c:cond-expression)
   (pattern i:if-expression)
   (pattern l:let-expression)
-  (pattern I:identifier)
-  (pattern a:application)
+  (pattern I:identifier-expression)
+  (pattern a:application-expression)
   (pattern e))
 
 (define-syntax-class toplevel
