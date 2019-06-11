@@ -71,14 +71,24 @@
 (struct scope (parent bindings)
   #:transparent)
 
+(define (scope-descendant? s other-s)
+  (let loop ([s* (scope-parent s)])
+    (cond
+      [(eq? s* other-s) #t]
+      [(scope-parent s*) => loop]
+      [else #f])))
+
 (struct binding-info (stx usages check-usages?)
   #:transparent)
 
-(define (make-binding-info stx [check-usages? #t])
-  (binding-info stx 0 check-usages?))
+(define (make-binding-info stx [usages 0] [check-usages? #t])
+  (binding-info stx usages check-usages?))
 
 (define current-scope
   (make-parameter (scope #f (make-hash))))
+
+(define current-punted-bindings  ;; name -> (listof scope)
+  (make-parameter (hash)))
 
 (define (push-scope!)
   (current-scope (scope (current-scope) (make-hash))))
@@ -105,21 +115,46 @@
 
 (define (track-binding! stx [fmt "~a"]
                         #:check-usages? [check-usages? #t])
-  (hash-set! (scope-bindings (current-scope))
-             (format-binding fmt stx)
-             (make-binding-info stx check-usages?)))
+  (define name (format-binding fmt stx))
+  (define usages
+    (cond
+      [(binding-punted? name)
+       (unpunt-binding! name)
+       1]
+
+      [else 0]))
+
+  (hash-set! (scope-bindings (current-scope)) name (make-binding-info stx usages check-usages?)))
+
+(define (punt-binding! name)
+  (current-punted-bindings
+   (hash-update (current-punted-bindings) name (curry cons (current-scope)) null)))
+
+(define (unpunt-binding! name)
+  (current-punted-bindings
+   (hash-update (current-punted-bindings) name (curry remove (current-scope)) null)))
+
+(define (binding-punted? name)
+  (cond
+    [(hash-ref (current-punted-bindings) name #f)
+     => (lambda (scopes)
+          (for/first ([scope (in-list scopes)]
+                      #:when (scope-descendant? scope (current-scope)))
+            #t))]
+
+    [else #f]))
 
 (define (track-binding-usage! name)
   (let loop ([scope (current-scope)])
-    (when scope
-      (define bindings (scope-bindings scope))
-      (cond
-        [(hash-has-key? bindings name)
-         (hash-update! bindings name (lambda (info)
-                                       (struct-copy binding-info info [usages (add1 (binding-info-usages info))])))]
+    (define bindings (scope-bindings scope))
+    (cond
+      [(hash-has-key? bindings name)
+       (hash-update! bindings name
+                     (lambda (info)
+                       (struct-copy binding-info info [usages (add1 (binding-info-usages info))])))]
 
-        [else
-         (loop (scope-parent scope))]))))
+      [(scope-parent scope) => loop]
+      [else (punt-binding! name)])))
 
 (define (check-unused-bindings!)
   (for ([(name binding) (in-hash (scope-bindings (current-scope)))])
@@ -296,12 +331,17 @@
                                  #:level 'error)]))
 
 (define-syntax-class provide-spec
-  #:datum-literals (rename-out struct-out)
+  #:datum-literals (contract-out rename-out struct struct-out)
   (pattern id:id
            #:do [(track-provided! #'id)])
 
+  (pattern (contract-out
+            ~!
+            [(~optional struct) name:id e] ...)
+           #:do [(for-each track-provided! (syntax-e #'(name ...)))])
+
   (pattern (rename-out ~! [to-rename-id:id renamed-id:provide-renamed-id] ...)
-           #:do [(map track-provided! (syntax-e #'(to-rename-id ...)))])
+           #:do [(for-each track-provided! (syntax-e #'(to-rename-id ...)))])
 
   (pattern (struct-out ~! struct-id:id)
            #:do [(track-provided! #'struct-id)])
