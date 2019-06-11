@@ -255,10 +255,14 @@
   (pattern e))
 
 (define-syntax-class toplevel
+  (pattern m:module)
   (pattern p:provide-statement)
   (pattern e:expression))
 
 (define-syntax-class module
   #:datum-literals (module module+ #%module-begin)
-  (pattern ((~or module module+) name:id path:id
-                                 (#%module-begin e:toplevel ...))))
+  (pattern (module name:id path:id
+             (#%module-begin e:toplevel ...)))
+
+  (pattern (module+ name:id
+             e:toplevel ...)))
