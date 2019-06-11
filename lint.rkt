@@ -4,6 +4,7 @@
          racket/file
          racket/format
          racket/function
+         racket/list
          racket/port
          racket/string
          racket/syntax
@@ -184,13 +185,16 @@
              (~do (pop-scope!)))))
 
 (define-syntax-class cond-expression
-  #:datum-literals (=> cond else)
+  #:datum-literals (=> cond)
   (pattern (cond
-             [c:expression (~optional =>) e:expression ...+] ...
-             [else eE:expression ...+]))
-  (pattern (cond
-             [c:expression (~optional =>) e:expression ...+] ...)
-           #:do [(track-problem! this-syntax "this cond expression does not have an else clause" )]))
+             ~!
+             [c:expression
+              (~optional =>)
+              (~do (push-scope!))
+              e:expression ...+
+              (~do (pop-scope!))] ...)
+           #:do [(unless (eq? (last (syntax->datum #'(c ...))) 'else)
+                   (track-problem! this-syntax "this cond expression does not have an else clause"))]))
 
 (define-syntax-class if-expression
   #:datum-literals (begin if let)

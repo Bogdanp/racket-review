@@ -28,3 +28,8 @@
 
 (define (j #:ok? [ok? #f])
   #t)
+
+(cond
+  [#t
+   (define z 1)
+   #f])

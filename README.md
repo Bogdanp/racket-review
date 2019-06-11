@@ -25,7 +25,9 @@ it lints.
 ``` racket
 (define (f a b)  ;; warning is reported for a and b
   1)
+```
 
+``` racket
 (define (f _ __)  ;; no warning is reported
   1)
 ```

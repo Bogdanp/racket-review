@@ -12,3 +12,7 @@
 (define (f x)
   (cond
     [(> x 0) 'positive]))
+
+(cond
+  [#f 1]
+  [else 2])
