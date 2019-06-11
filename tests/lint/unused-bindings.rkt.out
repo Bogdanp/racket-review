@@ -3,4 +3,8 @@
 /unused-bindings.rkt:12:16:warning:identifier 'y' is never used
 /unused-bindings.rkt:23:8:warning:identifier 'y' is never used
 /unused-bindings.rkt:22:8:warning:identifier 'x' is never used
+/unused-bindings.rkt:26:18:warning:identifier 'ok?' is never used
+/unused-bindings.rkt:29:19:warning:identifier 'ok?' is never used
 /unused-bindings.rkt:12:11:warning:identifier 'g' is never used
+/unused-bindings.rkt:29:10:warning:identifier 'j' is never used
+/unused-bindings.rkt:26:10:warning:identifier 'i' is never used

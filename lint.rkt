@@ -247,10 +247,7 @@
 
 (define-syntax-class function-argument
   (pattern arg:define-identifier)
-  (pattern [arg:define-identifier default:expression])
-
-  ;; TODO: keyword arguments.
-  (pattern _))
+  (pattern [arg:define-identifier default:expression]))
 
 (define-syntax-class function-header
   (pattern fun:define-identifier
@@ -258,7 +255,7 @@
            #:attr depth 0)
 
   (pattern (fun:function-header (~do (push-scope!))  ;; must be popped by the user according to depth
-                                arg:function-argument ...)
+                                (~seq (~optional k:keyword) arg:function-argument) ...)
            #:attr name (attribute fun.name)
            #:attr depth (add1 (attribute fun.depth))))
 

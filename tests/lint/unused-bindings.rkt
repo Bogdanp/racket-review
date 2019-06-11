@@ -22,3 +22,9 @@
 (let ([x 1]
       [y 2])
   3)
+
+(define (i #:ok? ok?)
+  #f)
+
+(define (j #:ok? [ok? #f])
+  #t)
