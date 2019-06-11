@@ -2,7 +2,9 @@
 
 ![a screenshot of konmari being used inside Emacs](media/screenshot.png)
 
-*warning: experimental software ahead*
+<p align="center">
+  <strong><em>warning: experimental software ahead</em></strong>
+</p>
 
 `konmari` performs surface-level linting with the intent of finding
 issues as quickly as it can.  As such, it does not expand the programs
