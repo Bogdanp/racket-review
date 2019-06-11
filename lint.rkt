@@ -93,6 +93,11 @@
       [(scope-parent scope) => loop]
       [else #f])))
 
+(define (underscores? name)
+  (regexp-match-exact? #rx"_+" (cond
+                                 [(symbol? name) (symbol->string name)]
+                                 [else name])))
+
 (define (name-bound-in-current-scope? name)
   (hash-has-key? (scope-bindings (current-scope)) name))
 
@@ -119,7 +124,7 @@
     (when (and (binding-info-check-usages? binding)
                (= (binding-info-usages binding) 0)
                (not (binding-provided? name))
-               (not (regexp-match-exact? #rx"_+" (symbol->string name))))
+               (not (underscores? name)))
       (track-problem! (binding-info-stx binding) (format "identifier '~a' is never used" name)))))
 
 
