@@ -11,26 +11,46 @@
 (define-runtime-path linter-tests
   (build-path "tests" "lint"))
 
+(file-stream-buffer-mode (current-output-port) 'none)
+(file-stream-buffer-mode (current-error-port) 'none)
+
 (define (indent s)
   (~a "  " s))
+
+(define (update-output-file! filepath output)
+  (with-output-to-file filepath
+    #:exists 'truncate/replace
+    (lambda ()
+      (for-each displayln output))))
 
 (for ([filename (directory-list linter-tests)]
       #:when (bytes=? (path-get-extension filename) #".rkt"))
   (define-values (in out) (make-pipe))
-  (define filepath (build-path linter-tests filename))
+  (define input-filepath (build-path linter-tests filename))
+  (define output-filepath (~a input-filepath ".out"))
 
   (match-define (list _ _ _ _ control)
-    (process*/ports out #f out (find-executable-path "raco") "konmari" "lint" filepath))
+    (process*/ports out #f out (find-executable-path "raco") "konmari" "lint" input-filepath))
   (control 'wait)
 
   (close-output-port out)
   (define command-output (port->lines in))
-  (define expected-output (call-with-input-file (~a filepath ".out") port->lines))
+  (define expected-output
+    (cond
+      [(file-exists? output-filepath)
+       (call-with-input-file output-filepath port->lines)]
+
+      [else
+       (begin0 command-output
+         (update-output-file! output-filepath command-output))]))
 
   (unless (equal? command-output expected-output)
-    (displayln (~a "output differs when linting " filepath))
+    (displayln (~a "output differs when linting " output-filepath))
     (displayln "expected:")
     (for-each (compose1 displayln indent) expected-output)
     (displayln "found:")
     (for-each (compose1 displayln indent) command-output)
-    (exit 1)))
+    (display "update? ")
+    (case (read-char)
+      [(#\y) (update-output-file! output-filepath command-output)]
+      [else (exit 1)])))
