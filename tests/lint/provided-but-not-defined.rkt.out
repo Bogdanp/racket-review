@@ -1,5 +1,5 @@
-/Users/bogdan/sandbox/konmari/tests/lint/provided-but-not-defined.rkt:7:17:error:not an identifier
-/Users/bogdan/sandbox/konmari/tests/lint/provided-but-not-defined.rkt:7:15:error:identifier 'l' provided but not defined
-/Users/bogdan/sandbox/konmari/tests/lint/provided-but-not-defined.rkt:6:15:error:identifier 'j' provided but not defined
-/Users/bogdan/sandbox/konmari/tests/lint/provided-but-not-defined.rkt:5:15:error:identifier 'h' provided but not defined
-/Users/bogdan/sandbox/konmari/tests/lint/provided-but-not-defined.rkt:4:2:error:identifier 'g' provided but not defined
+/provided-but-not-defined.rkt:7:17:error:not an identifier
+/provided-but-not-defined.rkt:7:15:error:identifier 'l' provided but not defined
+/provided-but-not-defined.rkt:6:15:error:identifier 'j' provided but not defined
+/provided-but-not-defined.rkt:5:15:error:identifier 'h' provided but not defined
+/provided-but-not-defined.rkt:4:2:error:identifier 'g' provided but not defined

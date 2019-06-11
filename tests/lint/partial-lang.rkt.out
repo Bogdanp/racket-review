@@ -1,1 +1,1 @@
-/Users/bogdan/sandbox/konmari/tests/lint/partial-lang.rkt:1:1:error:expected a single space after `#lang`
+/partial-lang.rkt:1:1:error:expected a single space after `#lang`

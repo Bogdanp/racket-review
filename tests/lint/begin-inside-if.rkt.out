@@ -1,2 +1,2 @@
-/Users/bogdan/sandbox/konmari/tests/lint/begin-inside-if.rkt:3:1:warning:use a cond expression instead of nesting begin or let inside an if
-/Users/bogdan/sandbox/konmari/tests/lint/begin-inside-if.rkt:8:1:warning:use a cond expression instead of nesting begin or let inside an if
+/begin-inside-if.rkt:3:1:warning:use a cond expression instead of nesting begin or let inside an if
+/begin-inside-if.rkt:8:1:warning:use a cond expression instead of nesting begin or let inside an if

@@ -1,1 +1,1 @@
-/Users/bogdan/sandbox/konmari/tests/lint/already-defined-argument.rkt:3:14:error:identifier 'g' is already defined
+/already-defined-argument.rkt:3:14:error:identifier 'g' is already defined

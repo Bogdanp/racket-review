@@ -6,6 +6,7 @@
          racket/path
          racket/port
          racket/runtime-path
+         racket/string
          racket/system)
 
 (define-runtime-path linter-tests
@@ -23,6 +24,9 @@
     (lambda ()
       (for-each displayln output))))
 
+(define (strip-prefixes line)
+  (string-replace line (path->string linter-tests) ""))
+
 (for ([filename (directory-list linter-tests)]
       #:when (bytes=? (path-get-extension filename) #".rkt"))
   (define-values (in out) (make-pipe))
@@ -34,7 +38,7 @@
   (control 'wait)
 
   (close-output-port out)
-  (define command-output (port->lines in))
+  (define command-output (map strip-prefixes (port->lines in)))
   (define expected-output
     (cond
       [(file-exists? output-filepath)
@@ -51,6 +55,8 @@
     (displayln "found:")
     (for-each (compose1 displayln indent) command-output)
     (display "update? ")
-    (case (read-char)
-      [(#\y) (update-output-file! output-filepath command-output)]
-      [else (exit 1)])))
+    (let loop ()
+      (case (read-char)
+        [(#\y) (update-output-file! output-filepath command-output)]
+        [(#\n) (exit 1)]
+        [else (loop)]))))
