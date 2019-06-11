@@ -2,3 +2,5 @@
 /cond-without-else.rkt:9:3:warning:this cond expression does not have an else clause
 /cond-without-else.rkt:12:12:warning:identifier 'x' shadows an earlier binding
 /cond-without-else.rkt:13:3:warning:this cond expression does not have an else clause
+/cond-without-else.rkt:12:10:warning:identifier 'f' is never used
+/cond-without-else.rkt:8:9:warning:identifier 'res' is never used

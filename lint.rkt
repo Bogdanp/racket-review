@@ -69,6 +69,12 @@
 (struct scope (parent bindings)
   #:transparent)
 
+(struct binding-info (stx usages check-usages?)
+  #:transparent)
+
+(define (make-binding-info stx [check-usages? #t])
+  (binding-info stx 0 check-usages?))
+
 (define current-scope
   (make-parameter (scope #f (make-hash))))
 
@@ -76,6 +82,7 @@
   (current-scope (scope (current-scope) (make-hash))))
 
 (define (pop-scope!)
+  (check-unused-bindings!)
   (when (scope-parent (current-scope))
     (current-scope (scope-parent (current-scope)))))
 
@@ -89,8 +96,31 @@
 (define (name-bound-in-current-scope? name)
   (hash-has-key? (scope-bindings (current-scope)) name))
 
-(define (track-binding! name)
-  (hash-set! (scope-bindings (current-scope)) name 'current-module))
+(define (track-binding! stx [fmt "~a"]
+                        #:check-usages? [check-usages? #t])
+  (hash-set! (scope-bindings (current-scope))
+             (format-binding fmt stx)
+             (make-binding-info stx check-usages?)))
+
+(define (track-binding-usage! name)
+  (let loop ([scope (current-scope)])
+    (when scope
+      (define bindings (scope-bindings scope))
+      (cond
+        [(hash-has-key? bindings name)
+         (hash-update! bindings name (lambda (info)
+                                       (struct-copy binding-info info [usages (add1 (binding-info-usages info))])))]
+
+        [else
+         (loop (scope-parent scope))]))))
+
+(define (check-unused-bindings!)
+  (for ([(name binding) (in-hash (scope-bindings (current-scope)))])
+    (when (and (binding-info-check-usages? binding)
+               (= (binding-info-usages binding) 0)
+               (not (binding-provided? name))
+               (not (regexp-match-exact? #rx"_+" (symbol->string name))))
+      (track-problem! (binding-info-stx binding) (format "identifier '~a' is never used" name)))))
 
 
 ;; provide ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -108,6 +138,11 @@
       (track-problem! binding:stx (~a "identifier '" binding:id "' provided but not defined")
                       #:level 'error))))
 
+(define (binding-provided? name)
+  (for/first ([binding:stx (provided-bindings)]
+              #:when (eq? name (syntax->datum binding:stx)))
+    #t))
+
 
 ;; rules ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -121,8 +156,12 @@
 
   (string->symbol (apply format fmt args:strs)))
 
+(define-syntax-class application
+  (pattern (e0:expression ~! e:expression ...)))
+
 (define-syntax-class identifier
-  (pattern id:id))
+  (pattern id:id
+           #:do [(track-binding-usage! (format-binding "~a" #'id))]))
 
 (define-syntax-class define-identifier
   (pattern id:id
@@ -134,15 +173,15 @@
                    [(name-bound? (syntax->datum #'id))
                     (track-problem! #'id (~a "identifier '" (syntax->datum #'id) "' shadows an earlier binding"))])
 
-                 (track-binding! (format-binding "~a" #'id))]))
+                 (track-binding! #'id)]))
 
 (define-syntax-class cond-expression
   #:datum-literals (cond else)
   (pattern (cond
-             [c e ...+] ...
-             [else eE ...+]))
+             [c:expression e:expression ...+] ...
+             [else eE:expression ...+]))
   (pattern (cond
-             [c e ...+] ...)
+             [c:expression e:expression ...+] ...)
            #:do [(track-problem! this-syntax "this cond expression does not have an else clause" )]))
 
 (define-syntax-class if-expression
@@ -179,16 +218,17 @@
 
 (define-syntax-class function-argument
   (pattern arg:define-identifier
-           #:do [(track-binding! (format-binding "~a" #'arg.id))]))
+           #:do [(track-binding! #'arg.id)]))
 
 (define-syntax-class function-header
   (pattern fun:define-identifier
-           #:attr name #''fun)
+           #:attr name #''fun
+           #:attr depth 0)
 
-  (pattern (fun:function-header (~do (push-scope!))
-                                arg:function-argument ...
-                                (~do (pop-scope!)))
-           #:attr name (attribute fun.name)))
+  (pattern (fun:function-header (~do (push-scope!))  ;; must be popped by the user according to depth
+                                arg:function-argument ...)
+           #:attr name (attribute fun.name)
+           #:attr depth (add1 (attribute fun.depth))))
 
 (define-syntax-class define-like
   (pattern id:id #:when (string-prefix? (symbol->string (syntax-e #'id)) "define/")))
@@ -205,13 +245,14 @@
             name:define-identifier
             ~!
             e:expression ...+)
-           #:do [(track-binding! (format-binding "~a" #'name.id))])
+           #:do [(track-binding! #'name.id)])
 
   (pattern ((~or define _:define-like)
             hdr:function-header
             (~do (push-scope!))
             e:expression ...+
-            (~do (pop-scope!)))))
+            (~do (for ([_ (in-range (add1 (attribute hdr.depth)))])
+                   (pop-scope!))))))
 
 (define-syntax-class provide-renamed-id
   (pattern id:id)
@@ -238,8 +279,9 @@
 
 (define-syntax-class define-struct-identifier
   (pattern name:id
-           #:do [(track-binding! (format-binding "~a" #'name))
-                 (track-binding! (format-binding "~a?" #'name))]))
+           #:do [(track-binding! #'name)
+                 (track-binding! #'name "~a?"
+                                 #:check-usages? #f)]))
 
 (define-syntax-class struct++-spec
   (pattern (name:id))
@@ -256,10 +298,12 @@
              (~optional super-id:identifier)
              (spec:struct++-spec ...)
              e ...)
-           #:do [(track-binding! (format-binding "~a++" #'name))
+           #:do [(track-binding! #'name "~a++")
                  (for-each (lambda (stx)
-                             (track-binding! (format-binding "set-~a-~a" #'name stx))
-                             (track-binding! (format-binding "update-~a-~a" #'name stx)))
+                             (track-binding! stx (string-append (symbol->string (format-binding "set-~a" #'name)) "-~a")
+                                             #:check-usages? #f)
+                             (track-binding! stx (string-append (symbol->string (format-binding "update-~a" #'name)) "-~a")
+                                             #:check-usages? #f))
                            (syntax-e #'(spec.name ...)))]))
 
 (define-syntax-class expression
@@ -268,6 +312,8 @@
   (pattern c:cond-expression)
   (pattern i:if-expression)
   (pattern l:let-expression)
+  (pattern I:identifier)
+  (pattern a:application)
   (pattern e))
 
 (define-syntax-class toplevel
@@ -278,7 +324,8 @@
 (define-syntax-class module
   #:datum-literals (module module+ #%module-begin)
   (pattern (module name:id path:id
-             (#%module-begin ~! e:toplevel ...)))
+             (#%module-begin ~! e:toplevel ...))
+           #:do [(check-unused-bindings!)])
 
   (pattern (module+ ~!
              name:id

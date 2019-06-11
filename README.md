@@ -12,6 +12,7 @@ it lints.  It currently detects:
 
 * missing and invalid #lang headers
 * syntax errors
+* unused identifiers (unless those identifiers are made up of underscores)
 * shadowed identifiers
 * malformed `if` and `let` expressions
 * redefined identifiers via `define` and `define-values`

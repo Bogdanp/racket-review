@@ -1,0 +1,6 @@
+/unused-bindings.rkt:7:11:warning:identifier 'y' is never used
+/unused-bindings.rkt:6:12:warning:identifier 'x' is never used
+/unused-bindings.rkt:12:16:warning:identifier 'y' is never used
+/unused-bindings.rkt:23:8:warning:identifier 'y' is never used
+/unused-bindings.rkt:22:8:warning:identifier 'x' is never used
+/unused-bindings.rkt:12:11:warning:identifier 'g' is never used

@@ -1,1 +1,2 @@
+/struct-plus-plus.rkt:11:11:warning:identifier 'user++' is never used
 /struct-plus-plus.rkt:8:2:error:identifier 'set-user-password' provided but not defined

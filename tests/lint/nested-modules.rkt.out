@@ -1,4 +1,7 @@
 /nested-modules.rkt:7:11:error:identifier 'b' is already defined
 /nested-modules.rkt:9:3:warning:use a cond expression instead of nesting begin or let inside an if
+/nested-modules.rkt:7:11:warning:identifier 'b' is never used
 /nested-modules.rkt:18:11:warning:identifier 'x' shadows an earlier binding
+/nested-modules.rkt:18:11:warning:identifier 'x' is never used
+/nested-modules.rkt:15:9:warning:identifier 'x' is never used
 /nested-modules.rkt:4:12:error:identifier 'a' provided but not defined
