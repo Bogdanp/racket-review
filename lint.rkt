@@ -153,18 +153,29 @@
                 (if cond:expression
                     e-then:expression
                     ((~or begin let) e ...+)))
-           #:do [(track-problem! this-syntax "use a cond expression instead of nesting begin or let inside an if")]))
+           #:do [(track-problem! this-syntax "use a cond expression instead of nesting begin or let inside an if")])
+
+  (pattern (if cond:expression
+               e-then:expression)
+           #:do [(track-problem! this-syntax "if expressions must contain one expression for the then-branch and another for the else-branch"
+                                 #:level 'error)]))
+
+(define-syntax-class define-let-identifier
+  (pattern (id:define-identifier e:expression)))
 
 (define-syntax-class let-expression
   #:datum-literals (let)
   (pattern (let
-               (~do (push-scope!))
-             (~optional proc-id:define-identifier)
-             ([id:define-identifier e:expression] ...+)
              (~do (push-scope!))
-             body:expression ...+
+             (~optional proc-id:define-identifier)
+             (id:define-let-identifier ...)
+             (~do (push-scope!))
+             body:expression ...
              (~do (pop-scope!)
-                  (pop-scope!)))))
+                  (pop-scope!)))
+           #:do [(when (null? (syntax-e #'(body ...)))
+                   (track-problem! this-syntax "let forms must contain at least one body expression"
+                                   #:level 'error))]))
 
 (define-syntax-class function-argument
   (pattern arg:define-identifier

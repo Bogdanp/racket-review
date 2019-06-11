@@ -13,6 +13,7 @@ it lints.  It currently detects:
 * missing and invalid #lang headers
 * syntax errors
 * shadowed identifiers
+* malformed `if` and `let` expressions
 * redefined identifiers via `define` and `define-values`
 * redefined identifiers inside `let`
 * identifiers that have been provided but not defined
