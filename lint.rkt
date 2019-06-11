@@ -283,6 +283,7 @@
 
   (pattern ((~or define _:define-like)
             hdr:function-header
+            ~!
             (~do (push-scope!))
             e:expression ...+
             (~do (for ([_ (in-range (add1 (attribute hdr.depth)))])
