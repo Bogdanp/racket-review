@@ -200,7 +200,9 @@
                                  #:level 'error)]))
 
 (define-syntax-class define-let-identifier
-  (pattern (id:define-identifier e:expression)))
+  (pattern (id:define-identifier e:expression)
+           #:do [(unless (eq? (syntax-property this-syntax 'paren-shape) #\[)
+                   (track-problem! this-syntax "bindings within a let should be surrounded by square brackets"))]))
 
 (define-syntax-class let-expression
   #:datum-literals (let)
