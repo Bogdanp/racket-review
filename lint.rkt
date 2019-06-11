@@ -176,7 +176,7 @@
              e0:expression ...+
              (~do (pop-scope!))))
 
-  (pattern (lambda (arg:function-argument ...)
+  (pattern (lambda ((~seq (~optional k:keyword) arg:function-argument) ...)
              ~!
              (~do (push-scope!))
              e1:expression ...+
