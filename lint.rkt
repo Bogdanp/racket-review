@@ -231,7 +231,7 @@
            #:attr depth (add1 (attribute fun.depth))))
 
 (define-syntax-class define-like
-  (pattern id:id #:when (string-prefix? (symbol->string (syntax-e #'id)) "define/")))
+  (pattern id:id #:when (regexp-match? #rx"define[-/]" (symbol->string (syntax-e #'id)))))
 
 (define-syntax-class definition
   #:datum-literals (define-values define)
