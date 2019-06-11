@@ -75,7 +75,7 @@
   (let loop ([s* (scope-parent s)])
     (cond
       [(eq? s* other-s) #t]
-      [(scope-parent s*) => loop]
+      [(and s* (scope-parent s*)) => loop]
       [else #f])))
 
 (struct binding-info (stx usages check-usages?)
@@ -139,7 +139,8 @@
     [(hash-ref (current-punted-bindings) name #f)
      => (lambda (scopes)
           (for/first ([scope (in-list scopes)]
-                      #:when (scope-descendant? scope (current-scope)))
+                      #:when (or (eq? scope (current-scope))
+                                 (scope-descendant? scope (current-scope))))
             #t))]
 
     [else #f]))
@@ -337,7 +338,7 @@
 
   (pattern (contract-out
             ~!
-            [(~optional struct) name:id e] ...)
+            [(~optional struct) name:id e:expression] ...)
            #:do [(for-each track-provided! (syntax-e #'(name ...)))])
 
   (pattern (rename-out ~! [to-rename-id:id renamed-id:provide-renamed-id] ...)
