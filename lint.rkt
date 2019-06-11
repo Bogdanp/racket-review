@@ -111,12 +111,25 @@
 
 ;; rules ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define (format-binding fmt . args)
+  (define args:strs
+    (for/list ([arg (in-list args)])
+      (cond
+        [(symbol? arg) (symbol->string) arg]
+        [(syntax? arg) (symbol->string (syntax->datum arg))]
+        [else arg])))
+
+  (string->symbol (apply format fmt args:strs)))
+
+(define-syntax-class identifier
+  (pattern id:id))
+
 (define-syntax-class define-identifier
   (pattern id:id
            #:do [(when (name-bound-in-current-scope? (syntax->datum #'id))
                    (track-problem! #'id (~a "identifier '" (syntax->datum #'id) "' is already defined")
                                    #:level 'error))
-                 (track-binding! (syntax->datum #'id))]))
+                 (track-binding! (format-binding "~a" #'id))]))
 
 (define-syntax-class cond-expression
   #:datum-literals (cond else)
@@ -150,7 +163,7 @@
 
 (define-syntax-class function-argument
   (pattern arg:define-identifier
-           #:do [(track-binding! (syntax->datum #'arg.id))]))
+           #:do [(track-binding! (format-binding "~a" #'arg.id))]))
 
 (define-syntax-class function-header
   (pattern fun:define-identifier
@@ -176,7 +189,7 @@
             name:define-identifier
             ~!
             e:expression ...+)
-           #:do [(track-binding! (syntax->datum #'name.id))])
+           #:do [(track-binding! (format-binding "~a" #'name.id))])
 
   (pattern ((~or define _:define-like)
             hdr:function-header
@@ -191,21 +204,47 @@
                                  #:level 'error)]))
 
 (define-syntax-class provide-spec
-  #:datum-literals (rename-out)
+  #:datum-literals (rename-out struct-out)
   (pattern id:id
            #:do [(track-provided! #'id)])
 
   (pattern (rename-out ~! [to-rename-id:id renamed-id:provide-renamed-id] ...)
-           #:do [(map track-provided! (syntax-e #'(to-rename-id ...)))]))
+           #:do [(map track-provided! (syntax-e #'(to-rename-id ...)))])
+
+  (pattern (struct-out ~! struct-id:id)
+           #:do [(track-provided! #'struct-id)])
+
+  (pattern e))
 
 (define-syntax-class provide-statement
   #:datum-literals (provide)
   (pattern (provide e:provide-spec ...+)))
 
+(define-syntax-class define-struct-identifier
+  (pattern name:id
+           #:do [(track-binding! (format-binding "~a" #'name))
+                 (track-binding! (format-binding "~a?" #'name))]))
+
+(define-syntax-class struct++-spec
+  (pattern (name:id))
+  (pattern (name:id c))
+  (pattern ([name:id e] c)))
+
 (define-syntax-class struct-definition
   #:datum-literals (struct struct++)
-  (pattern ((~or struct struct++) name:define-identifier e ...)
-           #:do [(track-binding! (syntax->datum (format-id #'name "~a?" (syntax-e #'name))))]))
+  (pattern (struct ~! name:define-struct-identifier e ...))
+
+  (pattern (struct++
+             ~!
+             name:define-struct-identifier
+             (~optional super-id:identifier)
+             (spec:struct++-spec ...)
+             e ...)
+           #:do [(track-binding! (format-binding "~a++" #'name))
+                 (for-each (lambda (stx)
+                             (track-binding! (format-binding "set-~a-~a" #'name stx))
+                             (track-binding! (format-binding "update-~a-~a" #'name stx)))
+                           (syntax-e #'(spec.name ...)))]))
 
 (define-syntax-class expression
   (pattern d:definition)
