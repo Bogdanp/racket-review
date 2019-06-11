@@ -171,11 +171,13 @@
 (define-syntax-class lambda-expression
   #:datum-literals (lambda)
   (pattern (lambda args:define-identifier
+             ~!
              (~do (push-scope!))
              e0:expression ...+
              (~do (pop-scope!))))
 
   (pattern (lambda (arg:function-argument ...)
+             ~!
              (~do (push-scope!))
              e1:expression ...+
              (~do (pop-scope!)))))
@@ -218,7 +220,7 @@
                  (track-binding! #'id)]))
 
 (define-syntax-class define-let-identifier
-  (pattern (id:id e:expression)
+  (pattern [id:id e:expression]
            #:do [(unless (eq? (syntax-property this-syntax 'paren-shape) #\[)
                    (track-problem! this-syntax "bindings within a let should be surrounded by square brackets"))
 
@@ -231,6 +233,7 @@
 (define-syntax-class let-expression
   #:datum-literals (let)
   (pattern (let
+             ~!
              (~do (push-scope!))
              (~optional proc-id:define-identifier)
              (id:define-let-identifier ...)
