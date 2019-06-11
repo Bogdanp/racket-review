@@ -1,5 +1,7 @@
 # konmari
 
+![a screenshot of konmari being used inside Emacs](media/screenshot.png)
+
 *warning: experimental software ahead*
 
 `konmari` performs surface-level linting with the intent of finding
