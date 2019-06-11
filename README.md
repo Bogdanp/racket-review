@@ -1,10 +1,6 @@
 # konmari
 
-`konmari` lints, idents and, optionally, fixes your Racket code.  It
-will, anyway, right now it doesn't do much and you shouldn't be using
-it.
-
-## Linting
+*warning: experimental software ahead*
 
 `konmari` performs surface-level linting with the intent of finding
 issues as quickly as it can.  As such, it does not expand the programs
