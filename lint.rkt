@@ -176,12 +176,12 @@
                  (track-binding! #'id)]))
 
 (define-syntax-class cond-expression
-  #:datum-literals (cond else)
+  #:datum-literals (=> cond else)
   (pattern (cond
-             [c:expression e:expression ...+] ...
+             [c:expression (~optional =>) e:expression ...+] ...
              [else eE:expression ...+]))
   (pattern (cond
-             [c:expression e:expression ...+] ...)
+             [c:expression (~optional =>) e:expression ...+] ...)
            #:do [(track-problem! this-syntax "this cond expression does not have an else clause" )]))
 
 (define-syntax-class if-expression
@@ -200,9 +200,15 @@
                                  #:level 'error)]))
 
 (define-syntax-class define-let-identifier
-  (pattern (id:define-identifier e:expression)
+  (pattern (id:id e:expression)
            #:do [(unless (eq? (syntax-property this-syntax 'paren-shape) #\[)
-                   (track-problem! this-syntax "bindings within a let should be surrounded by square brackets"))]))
+                   (track-problem! this-syntax "bindings within a let should be surrounded by square brackets"))
+
+                 (when (name-bound-in-current-scope? (syntax->datum #'id))
+                   (track-problem! #'id (~a "identifier '" (syntax->datum #'id) "' is already defined")
+                                   #:level 'error))
+
+                 (track-binding! #'id)]))
 
 (define-syntax-class let-expression
   #:datum-literals (let)
