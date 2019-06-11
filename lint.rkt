@@ -42,7 +42,8 @@
                    (lambda (e)
                      (begin0 #f
                        (for ([loc (exn:fail:read-srclocs e)])
-                         (track-problem! loc (cadr (string-split (exn-message e) "read-syntax: ")) #:level 'error))))])
+                         (track-problem! loc (cadr (string-split (exn-message e) "read-syntax: "))
+                                         #:level 'error))))])
     (define-values (base _ __) (split-path filename))
     (parameterize ([current-load-relative-directory base]
                    [current-namespace (make-base-namespace)])
@@ -194,11 +195,11 @@
 (define-syntax-class if-expression
   #:datum-literals (begin if let)
   (pattern (~or (if cond:expression
-                    ((~or begin let) e ...+)
+                    ((~or begin let) e:expression ...+)
                     e-else:expression)
                 (if cond:expression
                     e-then:expression
-                    ((~or begin let) e ...+)))
+                    ((~or begin let) e:expression ...+)))
            #:do [(track-problem! this-syntax "use a cond expression instead of nesting begin or let inside an if")])
 
   (pattern (if cond:expression
