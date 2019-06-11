@@ -126,9 +126,14 @@
 
 (define-syntax-class define-identifier
   (pattern id:id
-           #:do [(when (name-bound-in-current-scope? (syntax->datum #'id))
-                   (track-problem! #'id (~a "identifier '" (syntax->datum #'id) "' is already defined")
-                                   #:level 'error))
+           #:do [(cond
+                   [(name-bound-in-current-scope? (syntax->datum #'id))
+                    (track-problem! #'id (~a "identifier '" (syntax->datum #'id) "' is already defined")
+                                    #:level 'error)]
+
+                   [(name-bound? (syntax->datum #'id))
+                    (track-problem! #'id (~a "identifier '" (syntax->datum #'id) "' shadows an earlier binding"))])
+
                  (track-binding! (format-binding "~a" #'id))]))
 
 (define-syntax-class cond-expression
@@ -262,7 +267,10 @@
 (define-syntax-class module
   #:datum-literals (module module+ #%module-begin)
   (pattern (module name:id path:id
-             (#%module-begin e:toplevel ...)))
+             (#%module-begin ~! e:toplevel ...)))
 
-  (pattern (module+ name:id
-             e:toplevel ...)))
+  (pattern (module+ ~!
+             name:id
+             (~do (push-scope!))
+             e:toplevel ...
+             (~do (pop-scope!)))))

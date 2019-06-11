@@ -11,6 +11,7 @@ issues as quickly as it can.  As such, it does not expand the programs
 it lints.  It currently detects:
 
 * missing and invalid #lang headers
+* shadowed identifiers
 * redefined identifiers via `define` and `define-values`
 * redefined identifiers inside `let`
 * identifiers that have been provided but not defined

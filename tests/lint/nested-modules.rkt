@@ -11,3 +11,8 @@
         2)
       (begin
         3)))
+
+(define x 1)
+
+(module+ test
+  (define x 2))
