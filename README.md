@@ -139,3 +139,8 @@ checker for konmari:
 
 (add-to-list 'flycheck-checkers 'racket-konmari)
 ```
+
+## Prior work
+
+* http://planet.racket-lang.org/package-source/clements/no-brainer.plt/1/5/
+* http://tmp.barzilay.org/code-ayatollah.rkt
