@@ -139,8 +139,7 @@
     [(hash-ref (current-punted-bindings) name #f)
      => (lambda (scopes)
           (for/first ([scope (in-list scopes)]
-                      #:when (or (eq? scope (current-scope))
-                                 (scope-descendant? scope (current-scope))))
+                      #:when (scope-descendant? scope (current-scope)))
             #t))]
 
     [else #f]))
@@ -338,8 +337,10 @@
 
   (pattern (contract-out
             ~!
+            (~do (push-scope!)) ;; push a scope here so bindings are punted on
             [(~optional struct) name:id e:expression] ...)
-           #:do [(for-each track-provided! (syntax-e #'(name ...)))])
+           #:do [(for-each track-provided! (syntax-e #'(name ...)))
+                 (pop-scope!)])
 
   (pattern (rename-out ~! [to-rename-id:id renamed-id:provide-renamed-id] ...)
            #:do [(for-each track-provided! (syntax-e #'(to-rename-id ...)))])

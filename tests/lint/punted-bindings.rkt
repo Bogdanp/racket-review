@@ -15,3 +15,9 @@
   (let ()
     (define (show s)
       (displayln s))))
+
+(lambda ()
+  (show "hello")
+
+  (define (show s)
+    (displayln s)))
