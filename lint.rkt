@@ -297,7 +297,11 @@
   (pattern (fun:function-header (~do (push-scope!))  ;; must be popped by the user according to depth
                                 (~seq (~optional k:keyword) arg:function-argument) ...)
            #:attr name (attribute fun.name)
-           #:attr depth (add1 (attribute fun.depth))))
+           #:attr depth (add1 (attribute fun.depth)))
+
+  (pattern (fun:function-header . vararg:define-identifier)
+           #:attr name (attribute fun.name)
+           #:attr depth (attribute fun.depth)))
 
 (define-syntax-class define-like
   (pattern id:id #:when (regexp-match? #rx"define[-/]" (symbol->string (syntax-e #'id)))))
