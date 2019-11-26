@@ -1,0 +1,1 @@
+/let-with-parens.rkt:3:7:warning:bindings within a let should be surrounded by square brackets
