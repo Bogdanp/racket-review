@@ -1,7 +1,7 @@
 #lang info
 
 (define version "0.0.0")
-(define collection "konmari")
+(define collection "review")
 
 (define deps '("base"))
 (define build-deps '("base"
@@ -11,4 +11,4 @@
 (define test-omit-paths '("tests/lint"))
 
 (define raco-commands
-  '(("konmari" konmari/cli "run the konmari utility" #f)))
+  '(("review" review/cli "run the review utility" #f)))

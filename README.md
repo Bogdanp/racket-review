@@ -1,18 +1,18 @@
-# konmari
+# racket-review
 
-![a screenshot of konmari being used inside Emacs](media/screenshot.png)
+![a screenshot of racket-review being used inside Emacs](media/screenshot.png)
 
 <p align="center">
   <strong><em>warning: experimental software ahead</em></strong>
 </p>
 
-`konmari` performs surface-level linting with the intent of finding
-issues as quickly as it can.  As such, it does not expand the programs
-it lints.
+`racket-review` performs surface-level linting of individual Racket
+modules with the intent of finding issues as quickly as it can.  It
+does not expand the programs it lints.
 
 ## Warnings
 
-`konmari` currently emits the following warnings.
+`racket-review` currently emits the following warnings.
 
 ### `missing module (#lang) declaration`
 
@@ -74,7 +74,7 @@ it lints.
 
 ## Errors
 
-`konmari` currently emits the following errors.
+`racket-review` currently emits the following errors.
 
 ### `syntax error`
 
@@ -126,18 +126,18 @@ provide an identifier defined in another module.
 ## Emacs/flycheck support
 
 Add the following snippet to your `init.el` to define a Flycheck
-checker for konmari:
+checker for racket-review:
 
 ``` emacs-lisp
-(flycheck-define-checker racket-konmari
-  "check racket source code using konmari"
-  :command ("raco" "konmari" "lint" source)
+(flycheck-define-checker racket-review
+  "check racket source code using racket-review"
+  :command ("raco" "review" source)
   :error-patterns
   ((error line-start (file-name) ":" line ":" column ":error:" (message) line-end)
    (warning line-start (file-name) ":" line ":" column ":warning:" (message) line-end))
   :modes racket-mode)
 
-(add-to-list 'flycheck-checkers 'racket-konmari)
+(add-to-list 'flycheck-checkers 'racket-review)
 ```
 
 ## Prior work

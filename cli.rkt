@@ -26,46 +26,13 @@
 
     (displayln (~a source ":" line ":" (add1 column) ":" (problem-level problem) ":" (problem-message problem)))))
 
-(define (exit-with-errors! . messages)
-  (parameterize ([current-output-port (current-error-port)])
-    (for-each displayln messages))
+(define filename
+  (command-line
+   #:program (current-program-name)
+   #:args (filename)
+   (path->complete-path filename)))
+
+(define problems (lint filename))
+(unless (null? problems)
+  (for-each report-problem (reverse problems))
   (exit 1))
-
-(define (handle-help)
-  (exit-with-errors!
-   "usage: raco konmari <command> <option> ... <arg> ..."
-   ""
-   "available commands:"
-   "  help   display this help message"
-   "  lint   lint a Racket source file"))
-
-(define (handle-lint)
-  (define filename
-    (command-line
-     #:program (current-program-name)
-     #:args (filename)
-     (path->complete-path filename)))
-
-  (define problems (lint filename))
-  (unless (null? problems)
-    (for-each report-problem (reverse problems))
-    (exit 1)))
-
-(define ((handle-unknown command))
-  (exit-with-errors! @~a{error: unrecognized command '@command'}))
-
-(define all-commands
-  (hasheq 'lint  handle-lint
-          'help  handle-help))
-
-(define-values (command handler args)
-  (match (current-command-line-arguments)
-    [(vector command args ...)
-     (values command (hash-ref all-commands (string->symbol command) (handle-unknown command)) args)]
-
-    [_
-     (values "help" handle-help null)]))
-
-(parameterize ([current-command-line-arguments (list->vector args)]
-               [current-program-name (~a (current-program-name) " " command)])
-  (handler))

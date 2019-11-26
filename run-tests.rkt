@@ -34,7 +34,7 @@
   (define output-filepath (~a input-filepath ".out"))
 
   (match-define (list _ _ _ _ control)
-    (process*/ports out #f out (find-executable-path "raco") "konmari" "lint" input-filepath))
+    (process*/ports out #f out (find-executable-path "raco") "review" input-filepath))
   (control 'wait)
 
   (close-output-port out)
