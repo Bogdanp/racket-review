@@ -2,4 +2,4 @@
 /already-defined.rkt:5:10:error:identifier 'a' is already defined
 /already-defined.rkt:6:11:error:identifier 'a' is already defined
 /already-defined.rkt:7:12:error:identifier 'a' is already defined
-/already-defined.rkt:7:12:warning:identifier 'a' is never used
+/already-defined.rkt:4:9:warning:identifier 'a' is never used

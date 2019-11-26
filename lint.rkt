@@ -255,9 +255,12 @@
 
                    [(name-bound? (syntax->datum #'id))
                     (unless (underscores? (syntax->datum #'id))
-                      (track-problem! #'id (~a "identifier '" (syntax->datum #'id) "' shadows an earlier binding")))])
+                      (track-problem! #'id (~a "identifier '" (syntax->datum #'id) "' shadows an earlier binding")))
 
-                 (track-binding! #'id)]))
+                    (track-binding! #'id)]
+
+                   [else
+                    (track-binding! #'id)])]))
 
 (define-syntax-class define-let-identifier
   (pattern [id:id e:expression]
@@ -364,22 +367,46 @@
                  (track-binding! #'name "~a?"
                                  #:check-usages? #f)]))
 
-(define-syntax-class struct++-spec
+(define-syntax-class struct-field-spec
+  (pattern name:id
+           #:with mutable? #f)
+  (pattern [name:id (~alt (~and #:mutable field-mutable) e) ...]
+           #:with mutable? #'(~? (field-mutable ...) #f)))
+
+(define-syntax-class struct++-field-spec
   (pattern (name:id))
   (pattern (name:id c))
   (pattern ([name:id e] c)))
 
 (define-syntax-class struct-definition
   #:datum-literals (struct struct++)
-  (pattern (struct ~! name:define-struct-identifier e ...))
+  (pattern (struct
+             ~!
+             name:id
+             (~optional super-id:identifier-expression)
+             (field:struct-field-spec ...)
+             (~alt (~and #:mutable struct-mutable)
+                   e) ...)
+           #:do [(track-binding! #'name)
+                 (track-binding! #'name "~a?" #:check-usages? #f)
+                 (define prefix (symbol->string (format-binding "~a" #'name)))
+                 (define mutable? (not (null? (syntax->datum #'(struct-mutable ...)))))
+                 (for-each (lambda (stx field-mutable?)
+                             (track-binding! stx (string-append prefix "-~a") #:check-usages? #f)
+                             (when (or mutable? field-mutable?)
+                               (track-binding! stx (string-append "set-" prefix "-~a!") #:check-usages? #f)))
+                           (syntax-e #'(field.name ...))
+                           (map (compose1 not not syntax-e) (syntax-e #'(field.mutable? ...))))])
 
   (pattern (struct++
              ~!
-             name:define-struct-identifier
+             name:id
              (~optional super-id:identifier-expression)
-             (spec:struct++-spec ...)
+             (spec:struct++-field-spec ...)
              e ...)
-           #:do [(track-binding! #'name "~a++")
+           #:do [(track-binding! #'name #:check-usages? #f)
+                 (track-binding! #'name "~a?" #:check-usages? #f)
+                 (track-binding! #'name "~a++")
                  (for-each (lambda (stx)
                              (track-binding! stx (string-append (symbol->string (format-binding "set-~a" #'name)) "-~a")
                                              #:check-usages? #f)

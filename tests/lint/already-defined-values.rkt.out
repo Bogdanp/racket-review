@@ -10,4 +10,4 @@
 /already-defined-values.rkt:14:19:warning:identifier 'y' is never used
 /already-defined-values.rkt:14:21:warning:identifier 'z' is never used
 /already-defined-values.rkt:14:17:warning:identifier 'x' is never used
-/already-defined-values.rkt:9:17:warning:identifier 'a' is never used
+/already-defined-values.rkt:3:17:warning:identifier 'a' is never used
