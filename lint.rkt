@@ -1,13 +1,10 @@
 #lang racket/base
 
 (require racket/contract
-         racket/file
          racket/format
          racket/function
          racket/list
-         racket/port
          racket/string
-         racket/syntax
          syntax/modread
          syntax/parse)
 
@@ -15,7 +12,7 @@
  (struct-out problem)
  lint)
 
-(struct problem (stx level message solution)
+(struct problem (stx level message)
   #:transparent)
 
 (define current-problem-list
@@ -30,21 +27,24 @@
 
   (current-problem-list))
 
-(define (track-problem! stx message
-                        #:level [level 'warning]
-                        #:solution [solution identity])
+(define (track-problem! stx message [level 'warning])
   (current-problem-list
    (cons
-    (problem stx level message solution)
+    (problem stx level message)
     (current-problem-list))))
+
+(define (track-warning! stx message)
+  (track-problem! stx message))
+
+(define (track-error! stx message)
+  (track-problem! stx message 'error))
 
 (define (file->syntax filename)
   (with-handlers ([exn:fail:read?
                    (lambda (e)
                      (begin0 #f
                        (for ([loc (exn:fail:read-srclocs e)])
-                         (track-problem! loc (cadr (string-split (exn-message e) "read-syntax: "))
-                                         #:level 'error))))])
+                         (track-error! loc (cadr (string-split (exn-message e) "read-syntax: "))))))])
     (define-values (base _ __) (split-path filename))
     (parameterize ([current-load-relative-directory base]
                    [current-namespace (make-base-namespace)])
@@ -62,7 +62,7 @@
      #'module]
 
     [e
-     (track-problem! stx "missing module (#lang) declaration")
+     (track-warning! stx "missing module (#lang) declaration")
      #'e]))
 
 
@@ -162,7 +162,7 @@
                (= (binding-info-usages binding) 0)
                (not (binding-provided? name))
                (not (underscores? name)))
-      (track-problem! (binding-info-stx binding) (format "identifier '~a' is never used" name)))))
+      (track-warning! (binding-info-stx binding) (format "identifier '~a' is never used" name)))))
 
 
 ;; provide ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -177,8 +177,7 @@
   (for ([binding:stx (provided-bindings)])
     (define binding:id (syntax->datum binding:stx))
     (unless (name-bound? binding:id)
-      (track-problem! binding:stx (~a "identifier '" binding:id "' provided but not defined")
-                      #:level 'error))))
+      (track-error! binding:stx (~a "identifier '" binding:id "' provided but not defined")))))
 
 (define (binding-provided? name)
   (for/first ([binding:stx (provided-bindings)]
@@ -191,10 +190,13 @@
 (define (format-binding fmt . args)
   (define args:strs
     (for/list ([arg (in-list args)])
-      (cond
-        [(symbol? arg) (symbol->string) arg]
-        [(syntax? arg) (symbol->string (syntax->datum arg))]
-        [else arg])))
+      (string-replace
+       (cond
+         [(symbol? arg) (symbol->string arg)]
+         [(syntax? arg) (symbol->string (syntax->datum arg))]
+         [else arg])
+       "~"
+       "~~")))
 
   (string->symbol (apply format fmt args:strs)))
 
@@ -229,7 +231,7 @@
               e:expression ...+
               (~do (pop-scope!))] ...)
            #:do [(unless (eq? (last (syntax->datum #'(c ...))) 'else)
-                   (track-problem! this-syntax "this cond expression does not have an else clause"))]))
+                   (track-warning! this-syntax "this cond expression does not have an else clause"))]))
 
 (define-syntax-class if-expression
   #:datum-literals (begin if let)
@@ -239,23 +241,21 @@
                 (if cond:expression
                     e-then:expression
                     ((~or begin let) e:expression ...+)))
-           #:do [(track-problem! this-syntax "use a cond expression instead of nesting begin or let inside an if")])
+           #:do [(track-warning! this-syntax "use a cond expression instead of nesting begin or let inside an if")])
 
   (pattern (if cond:expression
                e-then:expression)
-           #:do [(track-problem! this-syntax "if expressions must contain one expression for the then-branch and another for the else-branch"
-                                 #:level 'error)]))
+           #:do [(track-error! this-syntax "if expressions must contain one expression for the then-branch and another for the else-branch")]))
 
 (define-syntax-class define-identifier
   (pattern id:id
            #:do [(cond
                    [(name-bound-in-current-scope? (syntax->datum #'id))
-                    (track-problem! #'id (~a "identifier '" (syntax->datum #'id) "' is already defined")
-                                    #:level 'error)]
+                    (track-error! #'id (~a "identifier '" (syntax->datum #'id) "' is already defined"))]
 
                    [(name-bound? (syntax->datum #'id))
                     (unless (underscores? (syntax->datum #'id))
-                      (track-problem! #'id (~a "identifier '" (syntax->datum #'id) "' shadows an earlier binding")))
+                      (track-warning! #'id (~a "identifier '" (syntax->datum #'id) "' shadows an earlier binding")))
 
                     (track-binding! #'id)]
 
@@ -265,11 +265,10 @@
 (define-syntax-class define-let-identifier
   (pattern [id:id e:expression]
            #:do [(unless (eq? (syntax-property this-syntax 'paren-shape) #\[)
-                   (track-problem! this-syntax "bindings within a let should be surrounded by square brackets"))
+                   (track-warning! this-syntax "bindings within a let should be surrounded by square brackets"))
 
                  (when (name-bound-in-current-scope? (syntax->datum #'id))
-                   (track-problem! #'id (~a "identifier '" (syntax->datum #'id) "' is already defined")
-                                   #:level 'error))
+                   (track-error! #'id (~a "identifier '" (syntax->datum #'id) "' is already defined")))
 
                  (track-binding! #'id)]))
 
@@ -285,8 +284,7 @@
              (~do (pop-scope!)
                   (pop-scope!)))
            #:do [(when (null? (syntax-e #'(body ...)))
-                   (track-problem! this-syntax "let forms must contain at least one body expression"
-                                   #:level 'error))]))
+                   (track-error! this-syntax "let forms must contain at least one body expression"))]))
 
 (define-syntax-class function-argument
   (pattern arg:define-identifier)
@@ -331,11 +329,23 @@
             (~do (for ([_ (in-range (add1 (attribute hdr.depth)))])
                    (pop-scope!))))))
 
+(define-syntax-class require-spec
+  (pattern mod:id
+           #:with s (symbol->string (syntax-e #'mod))))
+
+(define-syntax-class require-statement
+  #:datum-literals (require)
+  (pattern (require e:require-spec ...+)
+           #:do [(for ([m1 (in-list (syntax->datum #'(e.s ...)))]
+                       [m2 (in-list (drop (syntax->datum #'(e.s ...)) 1))]
+                       [s  (in-list (drop (syntax-e #'(e ...)) 1))])
+                   (unless (string>=? m2 m1)
+                     (track-warning! s (format "~.s should come before ~.s" m2 m1))))]))
+
 (define-syntax-class provide-renamed-id
   (pattern id:id)
   (pattern e
-           #:do [(track-problem! #'e "not an identifier"
-                                 #:level 'error)]))
+           #:do [(track-error! #'e "not an identifier")]))
 
 (define-syntax-class provide-spec
   #:datum-literals (contract-out rename-out struct struct-out)
@@ -408,10 +418,8 @@
                  (track-binding! #'name "~a?" #:check-usages? #f)
                  (track-binding! #'name "~a++")
                  (for-each (lambda (stx)
-                             (track-binding! stx (string-append (symbol->string (format-binding "set-~a" #'name)) "-~a")
-                                             #:check-usages? #f)
-                             (track-binding! stx (string-append (symbol->string (format-binding "update-~a" #'name)) "-~a")
-                                             #:check-usages? #f))
+                             (track-binding! stx (string-append (symbol->string (format-binding "set-~a" #'name)) "-~a") #:check-usages? #f)
+                             (track-binding! stx (string-append (symbol->string (format-binding "update-~a" #'name)) "-~a") #:check-usages? #f))
                            (syntax-e #'(spec.name ...)))]))
 
 (define-syntax-class expression
@@ -427,6 +435,7 @@
 
 (define-syntax-class toplevel
   (pattern m:module)
+  (pattern r:require-statement)
   (pattern p:provide-statement)
   (pattern e:expression))
 
