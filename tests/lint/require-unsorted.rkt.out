@@ -1,2 +1,2 @@
-/require-unsorted.rkt:4:10:warning:"racket/format" should come before "racket/string"
-/require-unsorted.rkt:5:10:warning:"racket/file" should come before "racket/format"
+/require-unsorted.rkt:4:10:warning:require "racket/format" should come before "racket/string"
+/require-unsorted.rkt:5:10:warning:require "racket/file" should come before "racket/format"

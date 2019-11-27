@@ -1,3 +1,3 @@
-/require-unsorted-local-1.rkt:4:10:warning:"racket/format" should come before "racket/string"
-/require-unsorted-local-1.rkt:5:10:warning:"racket/file" should come before "racket/format"
-/require-unsorted-local-1.rkt:7:10:warning:"a.rkt" should come before "b.rkt"
+/require-unsorted-local-1.rkt:4:10:warning:require "racket/format" should come before "racket/string"
+/require-unsorted-local-1.rkt:5:10:warning:require "racket/file" should come before "racket/format"
+/require-unsorted-local-1.rkt:7:10:warning:require "a.rkt" should come before "b.rkt"

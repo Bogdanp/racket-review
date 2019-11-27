@@ -10,118 +10,31 @@
 modules with the intent of finding issues as quickly as it can.  It
 does not expand the programs it lints.
 
-## Warnings
+It currently reports the following issues:
 
-`racket-review` currently emits the following warnings.
+* `[error]` "identifier * provided but not defined"
+* `[error]` "identifier is already defined"
+* `[error]` "if expressions must contain one expression for the then-branch and another for the else-branch"
+* `[error]` "let forms must contain at least one body expression"
+* `[error]` "syntax error"
+* `[warning]` "bindings within a let should be surrounded by square brackets"
+* `[warning]` "identifier * is already defined"
+* `[warning]` "identifier * is never used"
+* `[warning]` "identifier * shadows an earlier binding"
+* `[warning]` "missing module (#lang) declaration"
+* `[warning]` "require (for-syntax ...) should come before all others"
+* `[warning]` "require * should come after *"
+* `[warning]` "require * should come before *"
+* `[warning]` "this cond expression does not have an else clause"
+* `[warning]` "use a cond expression instead of nesting begin or let inside an if"
 
-### `missing module (#lang) declaration`
+## Setup
 
-``` racket
-(displayln "note the lack of a #lang at the beginning of this file")
-```
+    $ raco pkg install review
 
-### `identifier * is never used`
+## Usage
 
-``` racket
-(define (f a b)  ;; warning is reported for a and b
-  1)
-```
-
-``` racket
-(define (f _ __)  ;; no warning is reported
-  1)
-```
-
-### `identifier * shadows an earlier binding`
-
-``` racket
-(define a 1)
-
-(define (f a)  ;; warning is reported for a
-  a)
-```
-
-``` racket
-(define _ 1)
-
-(define (f _)  ;; no warning is reported
-  #f)
-```
-
-``` racket
-(define a 1)
-
-(let ([a 2])  ;; no warning is reported -- let is exempt
-  a)
-```
-
-### `this cond expression does not have an else clause`
-
-``` racket
-(cond
-  [#t 1])
-```
-
-### `use a cond expression instead of nesting begin or let inside an if`
-
-``` racket
-(if #t
-    (begin
-      (displayln 1)
-      (displayln 2))
-    ...)
-```
-
-## Errors
-
-`racket-review` currently emits the following errors.
-
-### `syntax error`
-
-The first invalid usage of syntax in every file is reported.
-
-### `identifier * is already defined`
-
-``` racket
-(define a 1)
-(define a 2)  ;; an error is reported here
-```
-
-``` racket
-(define-values (a a)
-  (values 1 2))
-```
-
-``` racket
-(let ([x 1]
-      [x 2])  ;; an error is reported here
-  (void))
-```
-
-### `identifier * provided but not defined`
-
-``` racket
-(provide a)
-
-;; a is not defined in this module
-```
-
-This rule currently erroneously reports this error when you attempt to
-provide an identifier defined in another module.
-
-### `if expressions must contain one expression for the then-branch and another for the else branch`
-
-``` racket
-(if ok?
-    #f)
-```
-
-### `let forms must contain at least one body expression`
-
-``` racket
-(let ([a 1]
-      [b 2]))
-```
+    $ raco review filename.rkt
 
 ## Emacs/flycheck support
 

@@ -98,12 +98,15 @@
   (when (scope-parent (current-scope))
     (current-scope (scope-parent (current-scope)))))
 
-(define (name-bound? name)
+(define (bindings-ref name)
   (let loop ([scope (current-scope)])
     (cond
-      [(hash-has-key? (scope-bindings scope) name) #t]
+      [(hash-ref (scope-bindings scope) name #f)]
       [(scope-parent scope) => loop]
       [else #f])))
+
+(define (name-bound? name)
+  (and (bindings-ref name) #t))
 
 (define (underscores? name)
   (regexp-match-exact? #rx"_+" (cond
@@ -318,8 +321,7 @@
   (pattern ((~or define _:define-like)
             name:define-identifier
             ~!
-            e:expression ...+)
-           #:do [(track-binding! #'name.id)])
+            e:expression ...+))
 
   (pattern ((~or define _:define-like)
             hdr:function-header
@@ -365,15 +367,15 @@
                    (cond
                      [(and (eq? t2 'syntax)
                            (not (eq? t1 t2)))
-                      (track-warning! s2 (format "syntax require should come before all others"))]
+                      (track-warning! s2 (format "require (for-syntax ...) should come before all others"))]
 
                      [(and (eq? t1 'relative)
                            (eq? t2 'absolute))
-                      (track-warning! s1 (format "relative require ~.s should come after ~.s" m1 m2))]
+                      (track-warning! s1 (format "require ~.s should come after ~.s" m1 m2))]
 
                      [(and (eq? t1 t2)
                            (string<? m2 m1))
-                      (track-warning! s2 (format "~.s should come before ~.s" m2 m1))]))]))
+                      (track-warning! s2 (format "require ~.s should come before ~.s" m2 m1))]))]))
 
 (define-syntax-class provide-renamed-id
   (pattern id:id)
@@ -418,15 +420,18 @@
 
 (define-syntax-class struct++-field-spec
   (pattern (name:id))
-  (pattern (name:id c))
-  (pattern ([name:id e] c)))
+  (pattern (name:id c ...+))
+  (pattern ([name:id e:expression] c ...+)))
 
 (define-syntax-class struct-definition
-  #:datum-literals (struct struct++)
-  (pattern (struct
+  #:datum-literals (serializable-struct serializable-struct/versions struct struct++)
+  (pattern ((~or serializable-struct
+                 serializable-struct/versions
+                 struct)
              ~!
              name:id
              (~optional super-id:identifier-expression)
+             (~optional version:number)
              (field:struct-field-spec ...)
              (~alt (~and #:mutable struct-mutable)
                    e) ...)
