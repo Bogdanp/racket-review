@@ -56,7 +56,9 @@
     (for-each (compose1 displayln indent) command-output)
     (display "update? ")
     (let loop ()
-      (case (read-char)
-        [(#\y) (update-output-file! output-filepath command-output)]
-        [(#\n) (exit 1)]
-        [else (loop)]))))
+      (if (getenv "BATCH")
+          (exit 1)
+          (case (read-char)
+            [(#\y) (update-output-file! output-filepath command-output)]
+            [(#\n) (exit 1)]
+            [else (loop)])))))
