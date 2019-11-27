@@ -331,16 +331,25 @@
 
 ;; TODO:
 ;;  * for-label
-;;  * for-syntax
 ;;  * combine-in
 ;;  * except-in
-;;  * prefix-in
 ;;  * rename-in
 (define-syntax-class require-spec
+  #:datum-literals (for-syntax prefix-in)
   (pattern mod:id
            #:with t 'absolute
            #:with s (symbol->string (syntax-e #'mod)))
   (pattern mod:string
+           #:with t 'relative
+           #:with s #'mod)
+  ;; TODO: dive into these.
+  (pattern (for-syntax e ...)
+           #:with t 'syntax
+           #:with s "")
+  (pattern (prefix-in prefix:id mod:id)
+           #:with t 'absolute
+           #:with s (symbol->string (syntax-e #'mod)))
+  (pattern (prefix-in prefix:id mod:string)
            #:with t 'relative
            #:with s #'mod))
 
@@ -354,6 +363,10 @@
                        [t2 (in-list (drop (syntax->datum #'(e.t ...)) 1))]
                        [s2 (in-list (drop (syntax-e #'(e ...)) 1))])
                    (cond
+                     [(and (eq? t2 'syntax)
+                           (not (eq? t1 t2)))
+                      (track-warning! s2 (format "syntax require should come before all others"))]
+
                      [(and (eq? t1 'relative)
                            (eq? t2 'absolute))
                       (track-warning! s1 (format "relative require ~.s should come after ~.s" m1 m2))]
