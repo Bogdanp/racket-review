@@ -315,8 +315,11 @@
            #:attr depth (attribute fun.depth)))
 
 (define-syntax-class define-like
-  (pattern id:id #:when (regexp-match? #rx"define[-/]" (symbol->string (syntax-e #'id)))))
+  #:datum-literals (define define/contract define/contract/provide define/provide)
+  (pattern (~or define define/contract define/contract/provide define/provide)))
 
+;; TODO:
+;;  * define-logger
 (define-syntax-class definition
   #:datum-literals (define-values define)
   (pattern (define-values (name:define-identifier ...+)
