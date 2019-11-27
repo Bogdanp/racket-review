@@ -1,5 +1,9 @@
 # racket-review
 
+<p align="left">
+  <a href="https://github.com/Bogdanp/racket-review/actions?query=workflow%3A%22CI%22"><img alt="GitHub Actions status" src="https://github.com/Bogdanp/racket-review/workflows/CI/badge.svg"></a>
+</p>
+
 ![a screenshot of racket-review being used inside Emacs](media/screenshot.png)
 
 <p align="center">
