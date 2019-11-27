@@ -329,18 +329,38 @@
             (~do (for ([_ (in-range (add1 (attribute hdr.depth)))])
                    (pop-scope!))))))
 
+;; TODO:
+;;  * for-label
+;;  * for-syntax
+;;  * combine-in
+;;  * except-in
+;;  * prefix-in
+;;  * rename-in
 (define-syntax-class require-spec
   (pattern mod:id
-           #:with s (symbol->string (syntax-e #'mod))))
+           #:with t 'absolute
+           #:with s (symbol->string (syntax-e #'mod)))
+  (pattern mod:string
+           #:with t 'relative
+           #:with s #'mod))
 
 (define-syntax-class require-statement
   #:datum-literals (require)
   (pattern (require e:require-spec ...+)
            #:do [(for ([m1 (in-list (syntax->datum #'(e.s ...)))]
+                       [s1 (in-list (syntax-e #'(e ...)))]
+                       [t1 (in-list (syntax->datum #'(e.t ...)))]
                        [m2 (in-list (drop (syntax->datum #'(e.s ...)) 1))]
-                       [s  (in-list (drop (syntax-e #'(e ...)) 1))])
-                   (unless (string>=? m2 m1)
-                     (track-warning! s (format "~.s should come before ~.s" m2 m1))))]))
+                       [t2 (in-list (drop (syntax->datum #'(e.t ...)) 1))]
+                       [s2 (in-list (drop (syntax-e #'(e ...)) 1))])
+                   (cond
+                     [(and (eq? t1 'relative)
+                           (eq? t2 'absolute))
+                      (track-warning! s1 (format "relative require ~.s should come after ~.s" m1 m2))]
+
+                     [(and (eq? t1 t2)
+                           (string<? m2 m1))
+                      (track-warning! s2 (format "~.s should come before ~.s" m2 m1))]))]))
 
 (define-syntax-class provide-renamed-id
   (pattern id:id)

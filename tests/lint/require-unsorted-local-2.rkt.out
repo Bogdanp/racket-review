@@ -1,0 +1,2 @@
+/require-unsorted-local-2.rkt:4:10:warning:relative require "b.rkt" should come after "racket/format"
+/require-unsorted-local-2.rkt:6:10:warning:"racket/file" should come before "racket/format"
