@@ -212,15 +212,14 @@
 
 (define-syntax-class lambda-expression
   #:datum-literals (lambda)
-  (pattern (lambda args:define-identifier
+  (pattern (lambda args:define-identifier/new-scope
              ~!
-             (~do (push-scope!))
              e0:expression ...+
              (~do (pop-scope!))))
 
-  (pattern (lambda ((~seq (~optional k:keyword) arg:function-argument) ...)
-             ~!
+  (pattern (lambda ~!
              (~do (push-scope!))
+             ((~seq (~optional k:keyword) arg:function-argument) ...)
              e1:expression ...+
              (~do (pop-scope!)))))
 
@@ -250,20 +249,28 @@
                e-then:expression)
            #:do [(track-error! this-syntax "if expressions must contain one expression for the then-branch and another for the else-branch")]))
 
+(define (define-identifier! stx)
+  (cond
+    [(name-bound-in-current-scope? (syntax->datum stx))
+     (track-error! stx (~a "identifier '" (syntax->datum stx) "' is already defined"))]
+
+    [(name-bound? (syntax->datum stx))
+     (unless (underscores? (syntax->datum stx))
+       (track-warning! stx (~a "identifier '" (syntax->datum stx) "' shadows an earlier binding")))
+
+     (track-binding! stx)]
+
+    [else
+     (track-binding! stx)]))
+
 (define-syntax-class define-identifier
   (pattern id:id
-           #:do [(cond
-                   [(name-bound-in-current-scope? (syntax->datum #'id))
-                    (track-error! #'id (~a "identifier '" (syntax->datum #'id) "' is already defined"))]
+           #:do [(define-identifier! #'id)]))
 
-                   [(name-bound? (syntax->datum #'id))
-                    (unless (underscores? (syntax->datum #'id))
-                      (track-warning! #'id (~a "identifier '" (syntax->datum #'id) "' shadows an earlier binding")))
-
-                    (track-binding! #'id)]
-
-                   [else
-                    (track-binding! #'id)])]))
+(define-syntax-class define-identifier/new-scope
+  (pattern id:id
+           #:do [(push-scope!)
+                 (define-identifier! #'id)]))
 
 (define-syntax-class define-let-identifier
   (pattern [id:id e:expression]
@@ -440,9 +447,9 @@
                  (define prefix (symbol->string (format-binding "~a" #'name)))
                  (define mutable? (not (null? (syntax->datum #'(struct-mutable ...)))))
                  (for-each (lambda (stx field-mutable?)
-                             (track-binding! stx (string-append prefix "-~a") #:check-usages? #f)
+                             (track-binding! stx (string-append prefix "-~a"))
                              (when (or mutable? field-mutable?)
-                               (track-binding! stx (string-append "set-" prefix "-~a!") #:check-usages? #f)))
+                               (track-binding! stx (string-append "set-" prefix "-~a!"))))
                            (syntax-e #'(field.name ...))
                            (map (compose1 not not syntax-e) (syntax-e #'(field.mutable? ...))))])
 
