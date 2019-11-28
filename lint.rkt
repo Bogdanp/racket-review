@@ -25,7 +25,8 @@
   (when (and stx (not (eof-object? stx)))
     (lint-syntax! stx))
 
-  (current-problem-list))
+  (remove-duplicates
+   (current-problem-list)))
 
 (define (track-problem! stx message [level 'warning])
   (current-problem-list
