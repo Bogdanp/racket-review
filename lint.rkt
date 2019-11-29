@@ -89,7 +89,7 @@
 (define (scope-descendant? s other-s)
   (let loop ([s* (scope-parent s)])
     (cond
-      [(= (scope-id s*) (scope-id other-s)) #t]
+      [(and s* (= (scope-id s*) (scope-id other-s))) #t]
       [(and s* (scope-parent s*)) => loop]
       [else #f])))
 
