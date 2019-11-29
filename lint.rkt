@@ -69,13 +69,27 @@
 
 ;; scope ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(struct scope (parent bindings)
+(define *scope-id-seq* 0)
+
+(define (next-scope-id!)
+  (begin0 *scope-id-seq*
+    (set! *scope-id-seq* (add1 *scope-id-seq*))))
+
+(struct scope (id parent bindings)
   #:transparent)
+
+(define (make-scope parent bindings)
+  (scope (next-scope-id!) parent bindings))
+
+(define (scope-copy s)
+  (scope (scope-id s)
+         (scope-parent s)
+         (hash-copy (scope-bindings s))))
 
 (define (scope-descendant? s other-s)
   (let loop ([s* (scope-parent s)])
     (cond
-      [(eq? s* other-s) #t]
+      [(= (scope-id s*) (scope-id other-s)) #t]
       [(and s* (scope-parent s*)) => loop]
       [else #f])))
 
@@ -86,18 +100,17 @@
   (binding-info stx usages check-usages?))
 
 (define current-scope
-  (make-parameter (scope #f (make-hash))))
+  (make-parameter (make-scope #f (make-hash))))
 
 (define current-punted-bindings  ;; name -> (listof scope)
   (make-parameter (hash)))
 
 (define (push-scope!)
-  (current-scope (scope (current-scope) (make-hash))))
+  (current-scope (make-scope (current-scope) (make-hash))))
 
 (define (pop-scope!)
   (check-unused-bindings!)
-  (when (scope-parent (current-scope))
-    (current-scope (scope-parent (current-scope)))))
+  (current-scope (scope-parent (current-scope))))
 
 (define (bindings-ref name)
   (let loop ([scope (current-scope)])
@@ -169,6 +182,26 @@
       (track-warning! (binding-info-stx binding) (format "identifier '~a' is never used" name)))))
 
 
+;; undo ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(struct savepoint (scope punts problems)
+  #:transparent)
+
+(define current-savepoint
+  (make-parameter #f))
+
+(define (save!)
+  (current-savepoint
+   (savepoint (scope-copy (current-scope))
+              (current-punted-bindings)
+              (current-problem-list))))
+
+(define (undo!)
+  (current-scope (savepoint-scope (current-savepoint)))
+  (current-punted-bindings (savepoint-punts (current-savepoint)))
+  (current-problem-list (savepoint-problems (current-savepoint))))
+
+
 ;; provide ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define provided-bindings
@@ -214,13 +247,18 @@
 (define-syntax-class lambda-expression
   #:datum-literals (lambda)
   (pattern (lambda args:define-identifier/new-scope
-             ~!
              e0:expression ...+
              (~do (pop-scope!))))
 
-  (pattern (lambda ~!
+  (pattern (lambda
              (~do (push-scope!))
-             ((~seq (~optional k:keyword) arg:function-argument) ...)
+             (~or
+              (~and
+               (~do (save!))
+               ((~seq (~optional k:keyword) arg:function-argument) ...))
+              (~and
+               (~do (undo!))
+               ((~seq (~optional k:keyword) arg:function-argument) ... . vararg:function-argument)))
              e1:expression ...+
              (~do (pop-scope!)))))
 
@@ -298,49 +336,57 @@
                    (track-error! this-syntax "let forms must contain at least one body expression"))]))
 
 (define-syntax-class function-argument
+  #:commit
   (pattern arg:define-identifier)
   (pattern [arg:define-identifier default:expression]))
 
 (define-syntax-class function-header
+  #:commit
   (pattern fun:define-identifier
            #:attr name #''fun
            #:attr depth 0)
 
-  (pattern (fun:function-header (~do (push-scope!))  ;; must be popped by the user according to depth
-                                (~seq (~optional k:keyword) arg:function-argument) ...)
+  (pattern (~and
+            (~or
+             (~and
+              (~do (save!))
+              (fun:function-header (~do (push-scope!))  ;; must be popped by the user according to depth
+                                   (~seq (~optional k:keyword) arg:function-argument) ...))
+             (~and
+              (~do (undo!))
+              (fun:function-header (~do (push-scope!))  ;; must be popped by the user according to depth
+                                   (~seq (~optional k:keyword) arg:function-argument) ...
+                                   . vararg:define-identifier))))
            #:attr name (attribute fun.name)
-           #:attr depth (add1 (attribute fun.depth)))
-
-  (pattern (fun:function-header . vararg:define-identifier)
-           #:attr name (attribute fun.name)
-           #:attr depth (attribute fun.depth)))
+           #:attr depth (add1 (attribute fun.depth))))
 
 (define-syntax-class define-like
-  #:datum-literals (define define/contract define/contract/provide define/provide)
-  (pattern (~or define define/contract define/contract/provide define/provide)))
+  #:datum-literals (define define-syntax define/contract define/contract/provide define/provide)
+  (pattern (~or define define-syntax define/contract define/contract/provide define/provide)))
 
 ;; TODO:
 ;;  * define-logger
 (define-syntax-class definition
-  #:datum-literals (define-values define)
+  #:datum-literals (define-values)
+  #:commit
   (pattern (define-values (name:define-identifier ...+)
              ~!
              (~do (push-scope!))
              e:expression ...+
              (~do (pop-scope!))))
 
-  (pattern ((~or define _:define-like)
+  (pattern (_:define-like
             name:define-identifier
             ~!
             e:expression ...+))
 
-  (pattern ((~or define _:define-like)
+  (pattern (_:define-like
             hdr:function-header
             ~!
             (~do (push-scope!))
-            e:expression ...+
-            (~do (for ([_ (in-range (add1 (attribute hdr.depth)))])
-                   (pop-scope!))))))
+            e:expression ...+)
+           #:do [(for ([_ (in-range (add1 (attribute hdr.depth)))])
+                   (pop-scope!))]))
 
 ;; TODO:
 ;;  * for-label
@@ -472,17 +518,23 @@
                            (syntax-e #'(spec.name ...)))]))
 
 (define-syntax-class expression
+  #:commit
   (pattern d:definition)
   (pattern s:struct-definition)
   (pattern l:lambda-expression)
   (pattern c:cond-expression)
   (pattern i:if-expression)
   (pattern l:let-expression)
-  (pattern I:identifier-expression)
   (pattern a:application-expression)
+  (pattern I:identifier-expression)
+  (pattern S:string)
+  (pattern N:number)
+  (pattern B:boolean)
+  (pattern K:keyword)
   (pattern e))
 
 (define-syntax-class toplevel
+  #:commit
   (pattern m:module)
   (pattern r:require-statement)
   (pattern p:provide-statement)

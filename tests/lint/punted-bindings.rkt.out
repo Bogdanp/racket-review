@@ -1,5 +1,4 @@
 /punted-bindings.rkt:16:14:warning:identifier 'show' is never used
 /punted-bindings.rkt:22:12:warning:identifier 'show' is never used
-/punted-bindings.rkt:27:10:warning:identifier 'breadcrumbs' shadows an earlier binding
-/punted-bindings.rkt:30:25:warning:identifier 'label' is never used
-/punted-bindings.rkt:30:21:warning:identifier 'uri' is never used
+/punted-bindings.rkt:28:25:warning:identifier 'label' is never used
+/punted-bindings.rkt:28:21:warning:identifier 'uri' is never used

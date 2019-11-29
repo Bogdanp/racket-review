@@ -22,8 +22,6 @@
   (define (show s)
     (displayln s)))
 
-
-;; This is a false-positive caused by the recursion inside of function-header.
 (define (breadcrumbs . crumbs)
   (haml (:ul.breadcrums (@ crumbs))))
 
