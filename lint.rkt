@@ -491,6 +491,8 @@
              (~optional version:number)
              (field:struct-field-spec ...)
              (~alt (~and #:mutable struct-mutable)
+                   (~seq #:property P:expression PV:expression)
+                   (~seq #:methods G:identifier-expression (d:definition ...))
                    e) ...)
            #:do [(track-binding! #'name)
                  (track-binding! #'name "~a?" #:check-usages? #f)
