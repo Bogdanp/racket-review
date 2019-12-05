@@ -376,13 +376,17 @@
 ;; TODO:
 ;;  * define-logger
 (define-syntax-class definition
-  #:datum-literals (define-values)
+  #:datum-literals (define-system define-values)
   #:commit
   (pattern (define-values (name:define-identifier ...+)
              ~!
              (~do (push-scope!))
              e:expression ...+
              (~do (pop-scope!))))
+
+  ;; from component-lib
+  (pattern (define-system name:id e ...)
+           #:do [(track-binding! #'name "~a-system")])
 
   (pattern (_:define-like
             name:define-identifier
