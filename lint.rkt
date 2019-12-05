@@ -1,5 +1,7 @@
 #lang racket/base
 
+#|review: ignore|#
+
 (require racket/contract
          racket/format
          racket/function
@@ -18,11 +20,18 @@
 (define current-problem-list
   (make-parameter null))
 
+(define ignore-re #rx"#\\|review: ignore\\|#")
+(define (ignore? filename)
+  (call-with-input-file filename
+    (lambda (in)
+      (regexp-match? ignore-re in))))
+
 (define/contract (lint filename)
   (-> path-string? (listof problem?))
-
   (define stx (file->syntax filename))
-  (when (and stx (not (eof-object? stx)))
+  (when (and stx
+             (not (eof-object? stx))
+             (not (ignore? filename)))
     (lint-syntax! stx))
 
   (remove-duplicates

@@ -40,6 +40,14 @@ It currently reports the following issues:
 
     $ raco review filename.rkt
 
+To tell the linter to ignore an entire module, add a comment like
+
+``` racket
+#|review: ignore|#
+```
+
+to the source file.
+
 ## Emacs/flycheck support
 
 Add the following snippet to your `init.el` to define a Flycheck
