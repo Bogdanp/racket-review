@@ -69,3 +69,4 @@ checker for racket-review:
 
 * http://planet.racket-lang.org/package-source/clements/no-brainer.plt/1/5/
 * http://tmp.barzilay.org/code-ayatollah.rkt
+* https://github.com/jackfirth/syntax-warn
