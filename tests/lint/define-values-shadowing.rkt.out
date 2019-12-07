@@ -1,0 +1,2 @@
+/define-values-shadowing.rkt:9:10:error:identifier 'a' is already defined
+/define-values-shadowing.rkt:3:17:warning:identifier 'a' is never used

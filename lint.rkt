@@ -378,14 +378,16 @@
 (define-syntax-class definition
   #:datum-literals (define-system define-values)
   #:commit
-  (pattern (define-values (name:define-identifier ...+)
+  (pattern (define-values (name:id ...+)
              ~!
              (~do (push-scope!))
              e:expression ...+
-             (~do (pop-scope!))))
+             (~do (pop-scope!)))
+           #:do [(for ([name (in-list (syntax->list #'(name ...)))])
+                   (define-identifier! name))])
 
   ;; from component-lib
-  (pattern (define-system name:id e ...)
+  (pattern (define-system ~! name:id e ...)
            #:do [(track-binding! #'name "~a-system")])
 
   (pattern (_:define-like

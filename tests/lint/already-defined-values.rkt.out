@@ -1,11 +1,11 @@
 /already-defined-values.rkt:3:19:error:identifier 'a' is already defined
 /already-defined-values.rkt:6:17:error:identifier 'a' is already defined
 /already-defined-values.rkt:6:21:error:identifier '_' is already defined
+/already-defined-values.rkt:10:19:warning:identifier 'b' shadows an earlier binding
+/already-defined-values.rkt:10:21:error:identifier 'b' is already defined
 /already-defined-values.rkt:9:17:error:identifier 'a' is already defined
 /already-defined-values.rkt:9:19:error:identifier '_' is already defined
 /already-defined-values.rkt:9:21:error:identifier '_' is already defined
-/already-defined-values.rkt:10:19:warning:identifier 'b' shadows an earlier binding
-/already-defined-values.rkt:10:21:error:identifier 'b' is already defined
 /already-defined-values.rkt:3:21:warning:identifier 'b' is never used
 /already-defined-values.rkt:14:19:warning:identifier 'y' is never used
 /already-defined-values.rkt:14:21:warning:identifier 'z' is never used
