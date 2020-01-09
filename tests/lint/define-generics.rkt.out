@@ -1,0 +1,3 @@
+/define-generics.rkt:12:4:warning:generic identifier 'to-jsexpr' not bound in definition
+/define-generics.rkt:11:4:warning:identifier '->jsexpr/options' is never used
+/define-generics.rkt:12:4:warning:identifier '->jsexpr/bad' is never used

@@ -7,6 +7,7 @@
          racket/function
          racket/list
          racket/string
+         racket/syntax
          syntax/modread
          syntax/parse)
 
@@ -377,10 +378,8 @@
   #:datum-literals (define define-syntax define/contract define/contract/provide define/provide)
   (pattern (~or define define-syntax define/contract define/contract/provide define/provide)))
 
-;; TODO:
-;;  * define-logger
 (define-syntax-class definition
-  #:datum-literals (define-system define-values)
+  #:datum-literals (define-generics define-logger define-system define-values)
   #:commit
   (pattern (define-values (name:id ...+)
              ~!
@@ -389,6 +388,33 @@
              (~do (pop-scope!)))
            #:do [(for ([name (in-list (syntax->list #'(name ...)))])
                    (define-identifier! name))])
+
+  ;; from racket/generic
+  (pattern (define-generics ~! name:id
+             (fn-name:id arg:id ...) ...
+             e ...)
+           #:do [(define-identifier! (format-id #'name "gen:~a" #'name))
+                 (for ([fn (in-list (syntax->list #'((fn-name arg ...) ...)))])
+                   (define parts (syntax->list fn))
+                   (define fn-name (car parts))
+                   (define fn-args (cdr parts))
+                   (define-identifier! fn-name)
+
+                   (define generic-found?
+                     (for/first ([fn-arg (in-list fn-args)]
+                                 #:when (eq? (syntax->datum fn-arg)
+                                             (syntax->datum #'name))) #t))
+
+                   (unless generic-found?
+                     (track-warning! fn-name (~a "generic identifier '" (syntax->datum #'name) "' not bound in definition"))))])
+
+  (pattern (define-logger ~! name:id e ...)
+           #:do [(define-identifier! (format-id #'name "~a-logger" #'name))
+                 (define-identifier! (format-id #'name "log-~a-fatal" #'name))
+                 (define-identifier! (format-id #'name "log-~a-error" #'name))
+                 (define-identifier! (format-id #'name "log-~a-warning" #'name))
+                 (define-identifier! (format-id #'name "log-~a-info" #'name))
+                 (define-identifier! (format-id #'name "log-~a-debug" #'name))])
 
   ;; from component-lib
   (pattern (define-system ~! name:id e ...)
