@@ -32,7 +32,7 @@
   (with-handlers ([exn:fail?
                    (lambda (e)
                      (track-error! (datum->syntax #f #f (list filename 1 0 1 1))
-                                   (exn-message e)))])
+                                   (car (string-split (exn-message e) "\n"))))])
     (define stx (file->syntax filename))
     (when (and stx
                (not (eof-object? stx))
