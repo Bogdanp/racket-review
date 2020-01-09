@@ -28,11 +28,15 @@
 
 (define/contract (lint filename)
   (-> path-string? (listof problem?))
-  (define stx (file->syntax filename))
-  (when (and stx
-             (not (eof-object? stx))
-             (not (ignore? filename)))
-    (lint-syntax! stx))
+  (with-handlers ([exn:fail?
+                   (lambda (e)
+                     (track-error! (datum->syntax #f #f (list filename 1 0 1 1))
+                                   (exn-message e)))])
+    (define stx (file->syntax filename))
+    (when (and stx
+               (not (eof-object? stx))
+               (not (ignore? filename)))
+      (lint-syntax! stx)))
 
   (remove-duplicates
    (current-problem-list)))
