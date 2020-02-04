@@ -393,7 +393,7 @@
   (pattern (define-generics ~! name:id
              (fn-name:id arg:id ...) ...
              e ...)
-           #:do [(define-identifier! (format-id #'name "gen:~a" #'name #:src #'name))
+           #:do [(define-identifier! (format-id #'name "gen:~a" #'name #:source #'name))
                  (for ([fn (in-list (syntax->list #'((fn-name arg ...) ...)))])
                    (define parts (syntax->list fn))
                    (define fn-name (car parts))
@@ -409,12 +409,12 @@
                      (track-warning! fn-name (~a "generic identifier '" (syntax->datum #'name) "' not bound in definition"))))])
 
   (pattern (define-logger ~! name:id e ...)
-           #:do [(define-identifier! (format-id #'name "~a-logger" #'name #:src #'name))
-                 (define-identifier! (format-id #'name "log-~a-fatal" #'name #:src #'name))
-                 (define-identifier! (format-id #'name "log-~a-error" #'name #:src #'name))
-                 (define-identifier! (format-id #'name "log-~a-warning" #'name #:src #'name))
-                 (define-identifier! (format-id #'name "log-~a-info" #'name #:src #'name))
-                 (define-identifier! (format-id #'name "log-~a-debug" #'name #:src #'name))])
+           #:do [(define-identifier! (format-id #'name "~a-logger" #'name #:source #'name))
+                 (define-identifier! (format-id #'name "log-~a-fatal" #'name #:source #'name))
+                 (define-identifier! (format-id #'name "log-~a-error" #'name #:source #'name))
+                 (define-identifier! (format-id #'name "log-~a-warning" #'name #:source #'name))
+                 (define-identifier! (format-id #'name "log-~a-info" #'name #:source #'name))
+                 (define-identifier! (format-id #'name "log-~a-debug" #'name #:source #'name))])
 
   ;; from component-lib
   (pattern (define-system ~! name:id e ...)
