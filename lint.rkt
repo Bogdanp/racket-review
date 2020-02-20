@@ -137,9 +137,10 @@
   (and (bindings-ref name) #t))
 
 (define (underscores? name)
-  (regexp-match-exact? #rx"_+" (cond
-                                 [(symbol? name) (symbol->string name)]
-                                 [else name])))
+  (define name:str (cond
+                     [(symbol? name) (symbol->string name)]
+                     [else name]))
+  (string-prefix? name:str "_"))
 
 (define (name-bound-in-current-scope? name)
   (hash-has-key? (scope-bindings (current-scope)) name))

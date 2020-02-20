@@ -33,3 +33,5 @@
   [#t
    (define z 1)
    #f])
+
+(define _foo 42)
