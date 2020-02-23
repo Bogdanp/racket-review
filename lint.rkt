@@ -395,6 +395,7 @@
              (fn-name:id arg:id ...) ...
              e ...)
            #:do [(define-identifier! (format-id #'name "gen:~a" #'name #:source #'name))
+                 (define-identifier! (format-id #'name "~a?" #'name #:source #'name))
                  (for ([fn (in-list (syntax->list #'((fn-name arg ...) ...)))])
                    (define parts (syntax->list fn))
                    (define fn-name (car parts))
@@ -538,7 +539,10 @@
              (field:struct-field-spec ...)
              (~alt (~and #:mutable struct-mutable)
                    (~seq #:property P:expression PV:expression)
-                   (~seq #:methods G:identifier-expression (d:definition ...))
+                   (~seq #:methods ~! G:identifier-expression
+                         (~do (push-scope!))
+                         (d:definition ...)
+                         (~do (pop-scope!)))
                    e) ...)
            #:do [(track-binding! #'name)
                  (track-binding! #'name "~a?" #:check-usages? #f)
