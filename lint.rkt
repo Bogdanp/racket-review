@@ -219,17 +219,16 @@
 
 ;; provide ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define provided-all-defined #f)
-
-(define (set-provided-all-defined!)
-  (when (not provided-all-defined)
-    (set! provided-all-defined #t)))
-
 (define provided-bindings
   (make-parameter null))
 
+(define all-bindings-provided? #f)
+
 (define (track-provided! name)
   (provided-bindings (cons name (provided-bindings))))
+
+(define (track-all-provided!)
+  (set! all-bindings-provided? #t))
 
 (define (check-provided-bindings!)
   (for ([binding:stx (provided-bindings)])
@@ -238,7 +237,7 @@
       (track-error! binding:stx (~a "identifier '" binding:id "' provided but not defined")))))
 
 (define (binding-provided? name)
-  (or provided-all-defined
+  (or all-bindings-provided?
       (for/first ([binding:stx (provided-bindings)]
                   #:when (eq? name (syntax->datum binding:stx)))
         #t)))
@@ -499,7 +498,7 @@
            #:do [(track-provided! #'id)])
 
   (pattern (all-defined-out)
-           #:do [(set-provided-all-defined!)])
+           #:do [(track-all-provided!)])
 
   (pattern (contract-out
             ~!
