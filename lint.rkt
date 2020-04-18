@@ -266,7 +266,7 @@
            #:do [(track-binding-usage! (format-binding "~a" #'id))]))
 
 (define-syntax-class lambda-expression
-  #:datum-literals (lambda match-lambda)
+  #:datum-literals (lambda)
   (pattern (lambda args:define-identifier/new-scope
              e0:expression ...+
              (~do (pop-scope!))))
@@ -281,16 +281,18 @@
                (~do (undo!))
                ((~seq (~optional k:keyword) arg:function-argument) ... . vararg:function-argument)))
              e1:expression ...+
-             (~do (pop-scope!))))
-
-  (pattern (match-lambda
-             (~and
-              (~do (push-scope!))
-              (clause e:expression ...)
-              (~do (pop-scope!))) ...)))
+             (~do (pop-scope!)))))
 
 (define-syntax-class cond-expression
-  #:datum-literals (=> cond)
+  #:datum-literals (=> case cond)
+  (pattern (case
+             ~!
+             ce:expression
+             [clause
+              (~do (push-scope!))
+              e:expression ...+
+              (~do (pop-scope!))] ...))
+
   (pattern (cond
              ~!
              [c:expression
@@ -300,6 +302,22 @@
               (~do (pop-scope!))] ...)
            #:do [(unless (eq? (last (syntax->datum #'(c ...))) 'else)
                    (track-warning! this-syntax "this cond expression does not have an else clause"))]))
+
+(define-syntax-class match-expression
+  #:datum-literals (match match-lambda)
+  (pattern (match
+               ~!
+             e:expression
+             [clause
+              (~do (push-scope!))
+              ce:expression ...+
+              (~do (pop-scope!))] ...+))
+
+  (pattern (match-lambda
+             [clause
+              (~do (push-scope!))
+              ce:expression ...+
+              (~do (pop-scope!))] ...+)))
 
 (define-syntax-class if-expression
   #:datum-literals (begin if let)
@@ -588,6 +606,7 @@
   (pattern d:definition)
   (pattern s:struct-definition)
   (pattern l:lambda-expression)
+  (pattern c:match-expression)
   (pattern c:cond-expression)
   (pattern i:if-expression)
   (pattern l:let-expression)

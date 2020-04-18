@@ -1,0 +1,2 @@
+/case.rkt:7:12:warning:identifier 'a' shadows an earlier binding
+/case.rkt:3:9:warning:identifier 'a' is never used
