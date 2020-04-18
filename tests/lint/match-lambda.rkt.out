@@ -1,0 +1,2 @@
+/match-lambda.rkt:5:9:warning:identifier 'foo' is never used
+/match-lambda.rkt:11:9:warning:identifier 'bar' is never used

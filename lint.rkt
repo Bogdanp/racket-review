@@ -266,7 +266,7 @@
            #:do [(track-binding-usage! (format-binding "~a" #'id))]))
 
 (define-syntax-class lambda-expression
-  #:datum-literals (lambda)
+  #:datum-literals (lambda match-lambda)
   (pattern (lambda args:define-identifier/new-scope
              e0:expression ...+
              (~do (pop-scope!))))
@@ -281,7 +281,13 @@
                (~do (undo!))
                ((~seq (~optional k:keyword) arg:function-argument) ... . vararg:function-argument)))
              e1:expression ...+
-             (~do (pop-scope!)))))
+             (~do (pop-scope!))))
+
+  (pattern (match-lambda
+             (~and
+              (~do (push-scope!))
+              (clause e:expression ...)
+              (~do (pop-scope!))) ...)))
 
 (define-syntax-class cond-expression
   #:datum-literals (=> cond)
@@ -382,8 +388,7 @@
            #:attr depth (add1 (attribute fun.depth))))
 
 (define-syntax-class define-like
-  #:datum-literals (define define-syntax define/contract define/contract/provide define/provide)
-  (pattern (~or define define-syntax define/contract define/contract/provide define/provide)))
+  (pattern id:id #:when (string-prefix? (symbol->string (syntax->datum #'id)) "define")))
 
 (define-syntax-class definition
   #:datum-literals (define-generics define-logger define-system define-values)
