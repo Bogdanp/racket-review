@@ -409,8 +409,19 @@
   (pattern id:id #:when (string-prefix? (symbol->string (syntax->datum #'id)) "define")))
 
 (define-syntax-class definition
-  #:datum-literals (define-generics define-logger define-system define-values)
+  #:datum-literals (define-generics define-logger define-syntax define-syntax-rule define-system define-values)
   #:commit
+  (pattern (define-syntax name:id ~! stx-e)
+           #:do [(track-binding! #'name)])
+
+  (pattern (define-syntax ~! (name:id stx-arg)
+             stx-e ...+)
+           #:do [(track-binding! #'name)])
+
+  (pattern (define-syntax-rule ~! (name:id arg ...)
+             stx-e ...+)
+           #:do [(track-binding! #'name)])
+
   (pattern (define-values (name:id ...+)
              ~!
              (~do (push-scope!))
