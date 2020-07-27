@@ -571,10 +571,11 @@
   (pattern ([name:id e:expression] c ...+)))
 
 (define-syntax-class struct-definition
-  #:datum-literals (serializable-struct serializable-struct/versions struct struct++)
+  #:datum-literals (serializable-struct serializable-struct/versions struct struct/contract struct++)
   (pattern ((~or serializable-struct
                  serializable-struct/versions
-                 struct)
+                 struct
+                 struct/contract)
              ~!
              name:id
              (~optional super-id:identifier-expression)
