@@ -333,7 +333,7 @@
                e-then:expression)
            #:do [(track-error! this-syntax "if expressions must contain one expression for the then-branch and another for the else-branch")]))
 
-(define (define-identifier! stx)
+(define (define-identifier! stx #:check-usages? [check-usages? #t])
   (cond
     [(name-bound-in-current-scope? (syntax->datum stx))
      (track-error! stx (~a "identifier '" (syntax->datum stx) "' is already defined"))]
@@ -342,10 +342,10 @@
      (unless (underscores? (syntax->datum stx))
        (track-warning! stx (~a "identifier '" (syntax->datum stx) "' shadows an earlier binding")))
 
-     (track-binding! stx)]
+     (track-binding! stx #:check-usages? check-usages?)]
 
     [else
-     (track-binding! stx)]))
+     (track-binding! stx #:check-usages? check-usages?)]))
 
 (define-syntax-class define-identifier
   (pattern id:id
@@ -451,12 +451,12 @@
                      (track-warning! fn-name (~a "generic identifier '" (syntax->datum #'name) "' not bound in definition"))))])
 
   (pattern (define-logger ~! name:id e ...)
-           #:do [(define-identifier! (format-id #'name "~a-logger" #'name #:source #'name))
-                 (define-identifier! (format-id #'name "log-~a-fatal" #'name #:source #'name))
-                 (define-identifier! (format-id #'name "log-~a-error" #'name #:source #'name))
-                 (define-identifier! (format-id #'name "log-~a-warning" #'name #:source #'name))
-                 (define-identifier! (format-id #'name "log-~a-info" #'name #:source #'name))
-                 (define-identifier! (format-id #'name "log-~a-debug" #'name #:source #'name))])
+           #:do [(define-identifier! #:check-usages? #f (format-id #'name "~a-logger" #'name #:source #'name))
+                 (define-identifier! #:check-usages? #f (format-id #'name "log-~a-fatal" #'name #:source #'name))
+                 (define-identifier! #:check-usages? #f (format-id #'name "log-~a-error" #'name #:source #'name))
+                 (define-identifier! #:check-usages? #f (format-id #'name "log-~a-warning" #'name #:source #'name))
+                 (define-identifier! #:check-usages? #f (format-id #'name "log-~a-info" #'name #:source #'name))
+                 (define-identifier! #:check-usages? #f (format-id #'name "log-~a-debug" #'name #:source #'name))])
 
   ;; from component-lib
   (pattern (define-system ~! name:id e ...)
