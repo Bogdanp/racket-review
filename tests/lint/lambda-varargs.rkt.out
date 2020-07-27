@@ -1,4 +1,4 @@
 /lambda-varargs.rkt:3:9:warning:identifier 'xs' is never used
 /lambda-varargs.rkt:6:12:warning:identifier 'b' is never used
-/lambda-varargs.rkt:6:16:warning:identifier 'xs' is never used
 /lambda-varargs.rkt:6:10:warning:identifier 'a' is never used
+/lambda-varargs.rkt:6:16:warning:identifier 'xs' is never used

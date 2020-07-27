@@ -7,6 +7,6 @@
 /unused-bindings.rkt:29:19:warning:identifier 'ok?' is never used
 /unused-bindings.rkt:34:12:warning:identifier 'z' is never used
 /unused-bindings.rkt:32:1:warning:this cond expression does not have an else clause
-/unused-bindings.rkt:12:11:warning:identifier 'g' is never used
 /unused-bindings.rkt:29:10:warning:identifier 'j' is never used
 /unused-bindings.rkt:26:10:warning:identifier 'i' is never used
+/unused-bindings.rkt:12:11:warning:identifier 'g' is never used

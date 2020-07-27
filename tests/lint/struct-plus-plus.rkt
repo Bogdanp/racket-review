@@ -4,7 +4,9 @@
 
 (provide
  user
+ user-username
  set-user-username
+ user-password-hash
  set-user-password
  set-user-password-hash)
 

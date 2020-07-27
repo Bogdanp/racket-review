@@ -608,6 +608,7 @@
                  (track-binding! #'name "~a?" #:check-usages? #f)
                  (track-binding! #'name "~a++")
                  (for-each (lambda (stx)
+                             (track-binding! stx (string-append (symbol->string (format-binding "~a" #'name)) "-~a") #:check-usages? #f)
                              (track-binding! stx (string-append (symbol->string (format-binding "set-~a" #'name)) "-~a") #:check-usages? #f)
                              (track-binding! stx (string-append (symbol->string (format-binding "update-~a" #'name)) "-~a") #:check-usages? #f))
                            (syntax-e #'(spec.name ...)))]))
