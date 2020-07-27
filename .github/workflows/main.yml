@@ -6,7 +6,10 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
     - uses: actions/checkout@master
-    - uses: Bogdanp/setup-racket@v0.5
+    - uses: Bogdanp/setup-racket@v0.8
+      with:
+        variant: 'CS'
+        version: '7.7'
     - run: raco pkg install --name review
     - run: racket run-tests.rkt
       env:
