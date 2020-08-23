@@ -303,18 +303,23 @@
            #:do [(unless (eq? (last (syntax->datum #'(c ...))) 'else)
                    (track-warning! this-syntax "this cond expression does not have an else clause"))]))
 
+(define-syntax-class match-clause
+  #:datum-literals (else)
+  (pattern else #:do [(track-error! this-syntax "use _ instead of else in the fallthrough case of a match expression")])
+  (pattern c))
+
 (define-syntax-class match-expression
   #:datum-literals (match match-lambda)
   (pattern (match
                ~!
              e:expression
-             [clause
+             [clause:match-clause
               (~do (push-scope!))
               ce:expression ...+
               (~do (pop-scope!))] ...+))
 
   (pattern (match-lambda
-             [clause
+             [clause:match-clause
               (~do (push-scope!))
               ce:expression ...+
               (~do (pop-scope!))] ...+)))
