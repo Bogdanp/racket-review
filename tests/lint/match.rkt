@@ -18,3 +18,7 @@
   [1
    (define bar 3)
    bar])
+
+(match foo
+  [null 1]
+  [_ 2])
