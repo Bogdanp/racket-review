@@ -1,2 +1,3 @@
 /case.rkt:7:12:warning:identifier 'a' shadows an earlier binding
+/case.rkt:16:4:error:case clause must be in the form (<const> ...), not '<const>
 /case.rkt:3:9:warning:identifier 'a' is never used

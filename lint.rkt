@@ -283,12 +283,20 @@
              e1:expression ...+
              (~do (pop-scope!)))))
 
+(define-syntax-class case-clause
+  #:datum-literals (quote quasiquote else)
+  (pattern else)
+  (pattern ({~and {~or* quote quasiquote} qt} _)
+           #:when (equal? (syntax-span #'qt) 1)
+           #:do [(track-error! this-syntax "case clause must be in the form (<const> ...), not '<const>")])
+  (pattern (_ ...)))
+
 (define-syntax-class cond-expression
   #:datum-literals (=> case cond)
   (pattern (case
              ~!
              ce:expression
-             [clause
+             [:case-clause
               (~do (push-scope!))
               e:expression ...+
               (~do (pop-scope!))] ...))
@@ -304,8 +312,10 @@
                    (track-warning! this-syntax "this cond expression does not have an else clause"))]))
 
 (define-syntax-class match-clause
-  #:datum-literals (else)
+  #:datum-literals (else null empty)
   (pattern else #:do [(track-error! this-syntax "use _ instead of else in the fallthrough case of a match expression")])
+  (pattern {~or* null empty}
+           #:do [(track-error! this-syntax "use '() instead of null or empty")])
   (pattern c))
 
 (define-syntax-class match-expression
