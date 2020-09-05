@@ -315,7 +315,7 @@
   #:datum-literals (else null empty)
   (pattern else #:do [(track-error! this-syntax "use _ instead of else in the fallthrough case of a match expression")])
   (pattern {~or* null empty}
-           #:do [(track-error! this-syntax "use '() instead of null or empty")])
+           #:do [(track-error! this-syntax "use '() for match pattern instead of null or empty")])
   (pattern c))
 
 (define-syntax-class match-expression
