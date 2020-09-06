@@ -1,2 +1,2 @@
 /match.rkt:9:12:warning:identifier 'foo' shadows an earlier binding
-/match.rkt:23:4:error:use '() instead of null or empty
+/match.rkt:23:4:error:use '() for match pattern instead of null or empty

@@ -22,6 +22,8 @@ It currently reports the following issues:
 * `[error]` "let forms must contain at least one body expression"
 * `[error]` "syntax error"
 * `[error]` "use _ instead of else in the fallthrough case of a match expression"
+* `[error]` "case clause must be in the form (<const> ...), not '<const>"
+* `[error]` "use '() for match pattern instead of null or empty"
 * `[warning]` "bindings within a let should be surrounded by square brackets"
 * `[warning]` "identifier * is already defined"
 * `[warning]` "identifier * is never used"
