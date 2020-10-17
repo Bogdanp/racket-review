@@ -248,13 +248,10 @@
 (define (format-binding fmt . args)
   (define args:strs
     (for/list ([arg (in-list args)])
-      (string-replace
-       (cond
-         [(symbol? arg) (symbol->string arg)]
-         [(syntax? arg) (symbol->string (syntax->datum arg))]
-         [else arg])
-       "~"
-       "~~")))
+      (cond
+        [(symbol? arg) (symbol->string arg)]
+        [(syntax? arg) (symbol->string (syntax->datum arg))]
+        [else arg])))
 
   (string->symbol (apply format fmt args:strs)))
 
