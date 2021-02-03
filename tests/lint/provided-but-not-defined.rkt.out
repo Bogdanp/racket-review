@@ -1,6 +1,6 @@
-/provided-but-not-defined.rkt:12:17:error:not an identifier
-/provided-but-not-defined.rkt:12:15:error:identifier 'l' provided but not defined
-/provided-but-not-defined.rkt:11:15:error:identifier 'j' provided but not defined
-/provided-but-not-defined.rkt:10:15:error:identifier 'h' provided but not defined
-/provided-but-not-defined.rkt:7:4:error:identifier 'a' provided but not defined
 /provided-but-not-defined.rkt:4:2:error:identifier 'g' provided but not defined
+/provided-but-not-defined.rkt:7:4:error:identifier 'a' provided but not defined
+/provided-but-not-defined.rkt:10:15:error:identifier 'h' provided but not defined
+/provided-but-not-defined.rkt:11:15:error:identifier 'j' provided but not defined
+/provided-but-not-defined.rkt:12:15:error:identifier 'l' provided but not defined
+/provided-but-not-defined.rkt:12:17:error:not an identifier

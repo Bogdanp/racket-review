@@ -1,2 +1,2 @@
-/struct-mutable.rkt:11:2:error:identifier 'set-user-password!' provided but not defined
 /struct-mutable.rkt:10:2:error:identifier 'user-password' provided but not defined
+/struct-mutable.rkt:11:2:error:identifier 'set-user-password!' provided but not defined

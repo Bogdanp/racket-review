@@ -122,11 +122,14 @@
       [(and s* (scope-parent s*)) => loop]
       [else #f])))
 
-(struct binding-info (stx usages check-usages?)
+(struct binding-info (stx usages check-usages? [related-stxes #:mutable])
   #:transparent)
 
-(define (make-binding-info stx [usages 0] [check-usages? #t])
-  (binding-info stx usages check-usages?))
+(define (make-binding-info stx [usages 0] [check-usages? #t] [related-stxes null])
+  (binding-info stx usages check-usages? related-stxes))
+
+(define (add-related-stx! bi stx)
+  (set-binding-info-related-stxes! bi (cons stx (binding-info-related-stxes bi))))
 
 (define current-scope
   (make-parameter (make-scope #f (make-hash))))
@@ -161,7 +164,8 @@
   (hash-has-key? (scope-bindings (current-scope)) name))
 
 (define (track-binding! stx [fmt "~a"]
-                        #:check-usages? [check-usages? #t])
+                        #:check-usages? [check-usages? #t]
+                        #:related-to [related-to-stx #f])
   (define name (format-binding fmt stx))
   (define usages
     (cond
@@ -170,6 +174,17 @@
        1]
 
       [else 0]))
+
+  (when related-to-stx
+    (define related-id
+      (format-binding "~a" related-to-stx))
+    (cond
+      [(related-provided? related-id)
+       (track-provided! (datum->syntax stx name))]
+
+      [(bindings-ref related-id)
+       => (lambda (bi)
+            (add-related-stx! bi (datum->syntax stx name)))]))
 
   (hash-set! (scope-bindings (current-scope)) name (make-binding-info stx usages check-usages?)))
 
@@ -237,10 +252,16 @@
 (define provided-bindings
   (make-parameter null))
 
+(define related-provided
+  (make-parameter null))
+
 (define all-bindings-provided? #f)
 
 (define (track-provided! name)
   (provided-bindings (cons name (provided-bindings))))
+
+(define (track-related-provided! name)
+  (related-provided (cons name (related-provided))))
 
 (define (track-all-provided!)
   (set! all-bindings-provided? #t))
@@ -256,6 +277,11 @@
       (for/first ([binding:stx (provided-bindings)]
                   #:when (eq? name (syntax->datum binding:stx)))
         #t)))
+
+(define (related-provided? name)
+  (for/first ([binding:stx (related-provided)]
+              #:when (eq? name (syntax->datum binding:stx)))
+    #t))
 
 
 ;; rules ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -575,7 +601,13 @@
            #:do [(for-each track-provided! (syntax-e #'(to-rename-id ...)))])
 
   (pattern (struct-out ~! struct-id:id)
-           #:do [(track-provided! #'struct-id)])
+           #:do [(track-provided! #'struct-id)
+                 (track-related-provided! #'struct-id)
+                 (cond
+                   [(bindings-ref (format-binding "~a" #'struct-id))
+                    => (lambda (bi)
+                         (for ([stx (in-list (binding-info-related-stxes bi))])
+                           (track-provided! stx)))])])
 
   (pattern e))
 
@@ -619,13 +651,13 @@
                          (~do (pop-scope!)))
                    e) ...)
            #:do [(track-binding! #'name)
-                 (track-binding! #'name "~a?" #:check-usages? #f)
+                 (track-binding! #'name "~a?" #:check-usages? #f #:related-to #'name)
                  (define prefix (symbol->string (format-binding "~a" #'name)))
                  (define mutable? (not (null? (syntax->datum #'(struct-mutable ...)))))
                  (for-each (lambda (stx field-mutable?)
-                             (track-binding! stx (string-append prefix "-~a"))
+                             (track-binding! stx (string-append prefix "-~a") #:related-to #'name)
                              (when (or mutable? field-mutable?)
-                               (track-binding! stx (string-append "set-" prefix "-~a!"))))
+                               (track-binding! stx (string-append "set-" prefix "-~a!") #:related-to #'name)))
                            (syntax-e #'(field.name ...))
                            (map (compose1 not not syntax-e) (syntax-e #'(field.mutable? ...))))])
 

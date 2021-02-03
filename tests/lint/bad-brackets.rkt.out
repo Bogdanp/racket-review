@@ -1,4 +1,4 @@
 /bad-brackets.rkt:3:7:warning:bindings within a let should be surrounded by square brackets
+/bad-brackets.rkt:4:8:warning:identifier 'y' is never used
 /bad-brackets.rkt:5:7:warning:bindings within a let should be surrounded by square brackets
 /bad-brackets.rkt:5:8:warning:identifier 'z' is never used
-/bad-brackets.rkt:4:8:warning:identifier 'y' is never used

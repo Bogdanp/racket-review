@@ -1,4 +1,4 @@
-/empty-let.rkt:3:8:warning:identifier 'x' is never used
 /empty-let.rkt:3:1:error:let forms must contain at least one body expression
-/empty-let.rkt:5:6:warning:identifier 'loop' is never used
+/empty-let.rkt:3:8:warning:identifier 'x' is never used
 /empty-let.rkt:5:1:error:let forms must contain at least one body expression
+/empty-let.rkt:5:6:warning:identifier 'loop' is never used

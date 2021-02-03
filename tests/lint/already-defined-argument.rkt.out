@@ -1,2 +1,2 @@
-/already-defined-argument.rkt:3:14:error:identifier 'g' is already defined
 /already-defined-argument.rkt:3:10:warning:identifier 'f' is never used
+/already-defined-argument.rkt:3:14:error:identifier 'g' is already defined
