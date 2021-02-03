@@ -19,6 +19,6 @@
 
 (define problems (lint filename))
 (unless (null? problems)
-  (for ([p (in-list (sort problems problem<))])
+  (for ([p (in-list (sort problems problem<?))])
     (report-problem p))
   (exit 1))
