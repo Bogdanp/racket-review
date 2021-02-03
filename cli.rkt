@@ -2,25 +2,14 @@
 
 (require racket/cmdline
          racket/format
-         racket/match
          raco/command-name
          "lint.rkt")
 
-(define (report-problem problem)
-  (define stx (problem-stx problem))
+(define (report-problem p)
   (define-values (source line column)
-    (cond
-      [(srcloc? stx)
-       (values (srcloc-source stx)
-               (srcloc-line stx)
-               (srcloc-column stx))]
+    (problem-loc p))
 
-      [else
-       (values (syntax-source stx)
-               (syntax-line stx)
-               (syntax-column stx))]))
-
-  (displayln (~a source ":" line ":" (add1 column) ":" (problem-level problem) ":" (problem-message problem))))
+  (displayln (~a source ":" line ":" (add1 column) ":" (problem-level p) ":" (problem-message p))))
 
 (define filename
   (command-line
@@ -30,5 +19,6 @@
 
 (define problems (lint filename))
 (unless (null? problems)
-  (for-each report-problem (reverse problems))
+  (for ([p (in-list (sort problems problem<))])
+    (report-problem p))
   (exit 1))
