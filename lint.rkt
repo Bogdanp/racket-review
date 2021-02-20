@@ -435,6 +435,17 @@
            #:do [(when (null? (syntax-e #'(body ...)))
                    (track-error! this-syntax "let forms must contain at least one body expression"))]))
 
+;; Expressions that introduce new scopes, like rackunit's `test-case'.
+(define-syntax-class scoping-expression-id
+  #:datum-literals (test-case)
+  (pattern test-case))
+
+(define-syntax-class scoping-expression
+  (pattern (id:scoping-expression-id ~!
+             (~do (push-scope!))
+             e:expression ...
+             (~do (pop-scope!)))))
+
 (define-syntax-class function-argument
   #:commit
   (pattern arg:define-identifier)
@@ -687,6 +698,7 @@
   (pattern c:cond-expression)
   (pattern i:if-expression)
   (pattern l:let-expression)
+  (pattern s:scoping-expression)
   (pattern a:application-expression)
   (pattern I:identifier-expression)
   (pattern S:string)
