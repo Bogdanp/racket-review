@@ -438,7 +438,8 @@
 ;; Expressions that introduce new scopes, like rackunit's `test-case'.
 (define-syntax-class scoping-expression-id
   #:datum-literals (test-case test-suite)
-  (pattern test-case))
+  (pattern test-case)
+  (pattern test-suite))
 
 (define-syntax-class scoping-expression
   (pattern (id:scoping-expression-id ~!
