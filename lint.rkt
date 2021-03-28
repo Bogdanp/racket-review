@@ -476,7 +476,7 @@
   (pattern id:id #:when (string-prefix? (symbol->string (syntax->datum #'id)) "define")))
 
 (define-syntax-class definition
-  #:datum-literals (define-generics define-logger define-syntax define-syntax-rule define-syntax-parser define-system define-values)
+  #:datum-literals (define-generics define-logger define-syntax define-syntax-rule define-syntax-parser define-system define-values define/match)
   #:commit
   (pattern (define-syntax name:id ~! stx-e)
            #:do [(track-binding! #'name)])
@@ -531,6 +531,14 @@
   ;; from component-lib
   (pattern (define-system ~! name:id e ...)
            #:do [(track-binding! #'name "~a-system")])
+
+  (pattern (define/match
+             hdr:function-header
+             ~!
+             (~do (push-scope!))
+             c:match-clause ...+)
+           #:do [(for ([_ (in-range (add1 (attribute hdr.depth)))])
+                   (pop-scope!))])
 
   (pattern (_:define-like
             name:define-identifier
