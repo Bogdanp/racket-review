@@ -306,12 +306,12 @@
            #:do [(track-binding-usage! (format-binding "~a" #'id))]))
 
 (define-syntax-class lambda-expression
-  #:datum-literals (lambda)
-  (pattern (lambda args:define-identifier/new-scope
+  #:datum-literals (lambda λ)
+  (pattern ((~or lambda λ) args:define-identifier/new-scope
              e0:expression ...+
              (~do (pop-scope!))))
 
-  (pattern (lambda
+  (pattern ((~or lambda λ)
              (~do (push-scope!))
              (~or
               (~and

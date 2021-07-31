@@ -9,6 +9,10 @@
 (lambda (a)
   a)
 
+(λ ()
+  (define a 1)
+  (void))
+
 (lambda (a b)
   a)
 
