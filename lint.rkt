@@ -435,6 +435,94 @@
            #:do [(when (null? (syntax-e #'(body ...)))
                    (track-error! this-syntax "let forms must contain at least one body expression"))]))
 
+(define-syntax-class define-for-clause
+  (pattern [id:id e:expression]
+           #:do [(unless (eq? (syntax-property this-syntax 'paren-shape) #\[)
+                   (track-error! this-syntax "'for' clauses should be surrounded by square brackets"))
+                 (when (name-bound-in-current-scope? (syntax->datum #'id))
+                   (track-error! #'id (~a "identifier '" (syntax->datum #'id) "' is already defined in another clause")))
+                 (track-binding! #'id)])
+  (pattern [(ids:id ...) e:expression]
+           #:do [(unless (eq? (syntax-property this-syntax 'paren-shape) #\[)
+                   (track-error! this-syntax "'for' clauses should be surrounded by square brackets"))
+                 (for ([id-stx (in-list (syntax-e #'(ids ...)))])
+                   (when (name-bound-in-current-scope? (syntax->datum id-stx))
+                     (track-error! #'id (~a "identifier '" (syntax->datum id-stx) "' is already defined in another clause")))
+                   (track-binding! id-stx))]))
+
+(define-splicing-syntax-class for-keyword
+  (pattern (~seq (~or #:when #:unless #:break #:final) e:expression)))
+
+(define-syntax-class for-expression
+  #:datum-literals (for for*
+                     for/and for*/and
+                     for/or for*/or
+                     for/first for*/first
+                     for/list for*/list
+                     for/hash for*/hash
+                     for/hasheq for*/hasheq
+                     for/hasheqv for*/hasheqv
+                     for/vector for*/vector
+                     for/fold for*/fold
+                     for/lists for*/lists)
+  (pattern ((~or for for*
+                 for/and for*/and
+                 for/or for*/or
+                 for/first for*/first
+                 for/list for*/list
+                 for/hash for*/hash
+                 for/hasheq for*/hasheq
+                 for/hasheqv for*/hasheqv)
+            ~!
+            (~do (push-scope!))
+            ((~or clause:define-for-clause kwd-clause:for-keyword) ...)
+            (~do (push-scope!))
+            (~or (~seq (~or #:break #:final) break-e:expression) body:expression) ...
+            (~do (pop-scope!)
+                 (pop-scope!)))
+           #:do [(when (null? (syntax-e #'(body ...)))
+                   (track-error! this-syntax "for forms must contain at least one body expression"))])
+
+  (pattern ((~or for/vector for*/vector)
+            ~!
+            (~optional (~seq #:length length-e:expression))
+            (~do (push-scope!))
+            ((~or clause:define-for-clause kwd-clause:for-keyword) ...)
+            (~do (push-scope!))
+            (~or (~seq (~or #:break #:final) break-e:expression) body:expression) ...
+            (~do (pop-scope!)
+                 (pop-scope!)))
+           #:do [(when (null? (syntax-e #'(body ...)))
+                   (track-error! this-syntax "for forms must contain at least one body expression"))])
+
+  (pattern ((~or for/fold for*/fold)
+            ~!
+            (~do (push-scope!))
+            (accum-id:define-for-clause ... (~optional (~seq #:result result-e:expression)))
+            (~do (push-scope!))
+            ((~or clause:define-for-clause kwd-clause:for-keyword) ...)
+            (~do (push-scope!))
+            (~or (~seq (~or #:break #:final) break-e:expression) body:expression) ...
+            (~do (pop-scope!)
+                 (pop-scope!)
+                 (pop-scope!)))
+           #:do [(when (null? (syntax-e #'(body ...)))
+                   (track-error! this-syntax "for forms must contain at least one body expression"))])
+
+  (pattern ((~or for/lists for*/lists)
+            ~!
+            (~do (push-scope!))
+            (id:define-identifier ... (~optional (~seq #:result result-e:expression)))
+            (~do (push-scope!))
+            ((~or clause:define-for-clause kwd-clause:for-keyword) ...)
+            (~do (push-scope!))
+            (~or (~seq (~or #:break #:final) break-e:expression) body:expression) ...
+            (~do (pop-scope!)
+                 (pop-scope!)
+                 (pop-scope!)))
+           #:do [(when (null? (syntax-e #'(body ...)))
+                   (track-error! this-syntax "for forms must contain at least one body expression"))]))
+
 ;; Expressions that introduce new scopes, like rackunit's `test-case'.
 (define-syntax-class scoping-expression-id
   #:datum-literals (test-case test-suite)
@@ -707,6 +795,7 @@
   (pattern c:cond-expression)
   (pattern i:if-expression)
   (pattern l:let-expression)
+  (pattern f:for-expression)
   (pattern s:scoping-expression)
   (pattern a:application-expression)
   (pattern I:identifier-expression)

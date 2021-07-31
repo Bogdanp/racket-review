@@ -1,0 +1,12 @@
+/for-expressions.rkt:3:9:warning:identifier 'foos' is never used
+/for-expressions.rkt:5:15:error:identifier 'i' is already defined in another clause
+/for-expressions.rkt:9:9:warning:identifier 'foo' is never used
+/for-expressions.rkt:10:9:warning:identifier 'bar' is never used
+/for-expressions.rkt:12:1:error:for forms must contain at least one body expression
+/for-expressions.rkt:13:12:error:'for' clauses should be surrounded by square brackets
+/for-expressions.rkt:15:13:warning:identifier 'x' is never used
+/for-expressions.rkt:21:17:warning:identifier 'c' is never used
+/for-expressions.rkt:24:14:warning:identifier 'z' is never used
+/for-expressions.rkt:40:13:warning:identifier 'xs' is never used
+/for-expressions.rkt:41:13:warning:identifier 'x' is never used
+/for-expressions.rkt:45:13:warning:identifier 'x' is never used
