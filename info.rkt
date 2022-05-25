@@ -8,7 +8,7 @@
                      "at-exp-lib"))
 
 (define compile-omit-paths '("tests/lint"))
-(define test-omit-paths '("tests/lint"))
+(define test-omit-paths 'all)
 
 (define raco-commands
   '(("review" review/cli "run the review utility" #f)))
