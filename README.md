@@ -68,6 +68,12 @@ checker for racket-review:
 (add-to-list 'flycheck-checkers 'racket-review)
 ```
 
+Or install the Emacs plugin from `elisp` directory:
+
+``` shell
+( cd elisp && make install )
+```
+
 ## Prior work
 
 * http://planet.racket-lang.org/package-source/clements/no-brainer.plt/1/5/
