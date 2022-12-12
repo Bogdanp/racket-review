@@ -1,6 +1,7 @@
 #lang info
 
-(define version "0.0.1")
+(define license 'BSD-3-Clause)
+(define version "0.1")
 (define collection "review")
 
 (define deps '("base"))
