@@ -560,6 +560,18 @@
            #:attr name (attribute fun.name)
            #:attr depth (add1 (attribute fun.depth))))
 
+(define-syntax-class class-define
+  (pattern {~or {~datum define/public}
+                {~datum define/pubment}
+                {~datum define/public-final}
+                {~datum define/override}
+                {~datum define/overment}
+                {~datum define/override-final}
+                {~datum define/augment}
+                {~datum define/augride}
+                {~datum define/augment-final}
+                {~datum define/private}}))
+
 (define-syntax-class define-like
   (pattern id:id #:when (string-prefix? (symbol->string (syntax->datum #'id)) "define")))
 
@@ -627,6 +639,14 @@
              c:match-clause ...+)
            #:do [(for ([_ (in-range (add1 (attribute hdr.depth)))])
                    (pop-scope!))])
+
+  (pattern (_:class-define name:id ~! e:expression))
+  (pattern (_:class-define
+            (name:id ~! {~do (push-scope!)} arg:function-argument ...)
+            (~do (push-scope!))
+            e:expression ...+)
+           #:do [(pop-scope!)
+                 (pop-scope!)])
 
   (pattern (_:define-like
             name:define-identifier
