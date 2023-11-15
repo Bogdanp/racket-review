@@ -346,7 +346,7 @@
              [c:expression
               (~optional =>)
               (~do (push-scope!))
-              e:expression ...+
+              e:expression ...
               (~do (pop-scope!))] ...)
            #:do [(unless (eq? (last (syntax->datum #'(c ...))) 'else)
                    (track-warning! this-syntax "this cond expression does not have an else clause"))]))

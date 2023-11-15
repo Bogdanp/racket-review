@@ -14,5 +14,8 @@
     [(> x 0) 'positive]))
 
 (cond
+  [(void)])
+
+(cond
   [#f 1]
   [else 2])
