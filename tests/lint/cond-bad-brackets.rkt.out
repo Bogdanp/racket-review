@@ -1,0 +1,4 @@
+/cond-bad-brackets.rkt:4:3:warning:this cond clause should be surrounded by square brackets
+/cond-bad-brackets.rkt:6:3:warning:this cond clause should be surrounded by square brackets
+/cond-bad-brackets.rkt:8:3:warning:this cond clause should be surrounded by square brackets
+/cond-bad-brackets.rkt:9:3:warning:this cond clause should be surrounded by square brackets

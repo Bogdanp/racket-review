@@ -348,7 +348,10 @@
               (~do (push-scope!))
               e:expression ...
               (~do (pop-scope!))] ...)
-           #:do [(unless (eq? (last (syntax->datum #'(c ...))) 'else)
+           #:do [(for ([clause-stx (in-list (cdr (syntax-e this-syntax)))])
+                   (unless (eq? (syntax-property clause-stx 'paren-shape) #\[)
+                     (track-warning! clause-stx "this cond clause should be surrounded by square brackets")))
+                 (unless (eq? (last (syntax->datum #'(c ...))) 'else)
                    (track-warning! this-syntax "this cond expression does not have an else clause"))]))
 
 (define-syntax-class match-clause
