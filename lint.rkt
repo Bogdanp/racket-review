@@ -37,19 +37,19 @@
   (make-parameter null))
 
 (define ignore-all-re #rx"#\\|review: ignore\\|#")
-(define ignore-line-re #rx";; (noqa|lint: ignore|review: ignore)")
+(define ignore-line-re #rx";; (noqa|lint: ignore|review: ignore)$")
 (define (lines-to-ignore filename)
-  (define ignore-all?
-    (call-with-input-file filename
-      (lambda (in)
-        (regexp-match? ignore-all-re in))))
-  (cond
-    [ignore-all? 'all]
-    [else (call-with-input-file filename
-            (lambda (in)
-              (for/list ([(line idx) (in-indexed (in-lines in))]
-                         #:when (regexp-match? ignore-line-re line))
-                (add1 idx))))]))
+  (call-with-input-file filename
+    (lambda (in)
+      (for/fold ([lines null])
+                ([(line idx) (in-indexed (in-lines in))])
+        (define all? (regexp-match? ignore-all-re line))
+        #:final all?
+        (cond
+          [all? 'all]
+          [(regexp-match? ignore-line-re line)
+           (cons (add1 idx) lines)]
+          [else lines])))))
 
 (define/contract (lint filename)
   (-> path-string? (listof problem?))
@@ -69,9 +69,9 @@
      (current-problem-list)))
   (if (pair? the-lines-to-ignore)
       (filter-not
-       (λ (problem)
+       (λ (p)
          (define-values (_source line _col)
-           (problem-loc problem))
+           (problem-loc p))
          (memv line the-lines-to-ignore))
        the-problems)
       the-problems))
