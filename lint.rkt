@@ -23,11 +23,9 @@
 (define (problem<? a b)
   (define-values (_source-a line-a column-a) (problem-loc a))
   (define-values (_source-b line-b column-b) (problem-loc b))
-  (cond
-    [(= line-a line-b)
-     (< column-a column-b)]
-    [else
-     (< line-a line-b)]))
+  (if (= line-a line-b)
+      (< column-a column-b)
+      (< line-a line-b)))
 
 (define (problem-loc p)
   (define stx (problem-stx p))
@@ -38,14 +36,25 @@
 (define current-problem-list
   (make-parameter null))
 
-(define ignore-re #rx"#\\|review: ignore\\|#")
-(define (ignore? filename)
-  (call-with-input-file filename
-    (lambda (in)
-      (regexp-match? ignore-re in))))
+(define ignore-all-re #rx"#\\|review: ignore\\|#")
+(define ignore-line-re #rx";; (noqa|lint: ignore|review: ignore)")
+(define (lines-to-ignore filename)
+  (define ignore-all?
+    (call-with-input-file filename
+      (lambda (in)
+        (regexp-match? ignore-all-re in))))
+  (cond
+    [ignore-all? 'all]
+    [else (call-with-input-file filename
+            (lambda (in)
+              (for/list ([(line idx) (in-indexed (in-lines in))]
+                         #:when (regexp-match? ignore-line-re line))
+                (add1 idx))))]))
 
 (define/contract (lint filename)
   (-> path-string? (listof problem?))
+  (define the-lines-to-ignore
+    (lines-to-ignore filename))
   (with-handlers ([exn:fail?
                    (lambda (e)
                      (track-error! (datum->syntax #f #f (list filename 1 0 1 1))
@@ -53,11 +62,19 @@
     (define stx (file->syntax filename))
     (when (and stx
                (not (eof-object? stx))
-               (not (ignore? filename)))
+               (not (eq? 'all the-lines-to-ignore)))
       (lint-syntax! stx)))
-
-  (remove-duplicates
-   (current-problem-list)))
+  (define the-problems
+    (remove-duplicates
+     (current-problem-list)))
+  (if (pair? the-lines-to-ignore)
+      (filter-not
+       (λ (problem)
+         (define-values (_source line _col)
+           (problem-loc problem))
+         (memv line the-lines-to-ignore))
+       the-problems)
+      the-problems))
 
 (define (track-problem! stx message [level 'warning])
   (current-problem-list

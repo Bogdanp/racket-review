@@ -51,6 +51,15 @@ To tell the linter to ignore an entire module, add a comment like
 
 to the source file.
 
+To tell it to ignore a particular line, end that line with one of the
+following comments:
+
+``` racket
+;; noqa
+;; lint: ignore
+;; review: ignore
+```
+
 ## Emacs/flycheck support
 
 Add the following snippet to your `init.el` to define a Flycheck
