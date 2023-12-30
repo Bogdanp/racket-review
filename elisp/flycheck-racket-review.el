@@ -4,7 +4,7 @@
 ;; Authors: Bogdan Popa <bogdan@defn.io>
 ;; Version: 0.0.0
 ;; Package-Requires: ((emacs "24.1") (flycheck "32"))
-;; Homepage: https://github.com/xgqt/racket-review
+;; Homepage: https://github.com/Bogdanp/racket-review
 ;; Keywords: convenience processes tools
 ;; SPDX-License-Identifier: BSD-3-Clause
 

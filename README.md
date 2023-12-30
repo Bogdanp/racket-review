@@ -6,13 +6,11 @@
 
 ![a screenshot of racket-review being used inside Emacs](media/screenshot.png)
 
-<p align="center">
-  <strong><em>warning: experimental software ahead</em></strong>
-</p>
-
 `racket-review` performs surface-level linting of individual Racket
-modules with the intent of finding issues as quickly as it can.  It
-does not expand the programs it lints.
+modules with the intent of finding issues as quickly as it can. It
+does not expand the programs it lints, so there may be cases where
+it is wrong, but, in practice, it performs reasonably well on `#lang
+racket{,/base}` programs.
 
 It currently reports the following issues:
 
@@ -49,10 +47,8 @@ To tell the linter to ignore an entire module, add a comment like
 #|review: ignore|#
 ```
 
-to the source file.
-
-To tell it to ignore a particular line, end that line with one of the
-following comments:
+to the source file. To tell it to ignore a particular line, end that
+line with one of the following comments:
 
 ``` racket
 ;; noqa
@@ -63,7 +59,7 @@ following comments:
 ## Emacs/flycheck support
 
 Add the following snippet to your `init.el` to define a Flycheck
-checker for racket-review:
+checker for `racket-review`:
 
 ``` emacs-lisp
 (flycheck-define-checker racket-review
@@ -77,10 +73,10 @@ checker for racket-review:
 (add-to-list 'flycheck-checkers 'racket-review)
 ```
 
-Or install the Emacs plugin from `elisp` directory:
+Or install the Emacs plugin from the `elisp` directory:
 
-``` shell
-( cd elisp && make install )
+```shell
+(cd elisp && make install)
 ```
 
 ## Prior work
@@ -88,3 +84,7 @@ Or install the Emacs plugin from `elisp` directory:
 * http://planet.racket-lang.org/package-source/clements/no-brainer.plt/1/5/
 * http://tmp.barzilay.org/code-ayatollah.rkt
 * https://github.com/jackfirth/syntax-warn
+
+## License
+
+    racket-review is licensed under the 3-Clause BSD license.
