@@ -81,6 +81,9 @@ Or install the Emacs plugin from the `elisp` directory:
 
 ## Adding Custom Rules
 
+**Note: this protocol is currently experimental and subject to change.
+If you use it in your own packages, please let me know.**
+
 A package may declare its own linting rules by providing a `review-exts`
 definition in its top-level `info.rkt` file. Each `review-exts`
 definition is a list of triples, where the first value is an absolute
