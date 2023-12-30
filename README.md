@@ -56,6 +56,24 @@ line with one of the following comments:
 ;; review: ignore
 ```
 
+## Adding Custom Rules
+
+**Note: this protocol is currently experimental and subject to change.
+If you use it in your own packages, please let me know.**
+
+A package may declare its own linting rules by providing a `review-exts`
+definition in its top-level `info.rkt` file. Each `review-exts`
+definition is a list of triples, where the first value is an absolute
+module path, the second is the name of a predicate procedure provided by
+that module, and the third is the name of a linting procedure provided
+by that module.
+
+Both the predicate and the linting procedure must take a single syntax
+object as argument. The linting procedure is called on a piece of syntax
+whenever the predicate procedure returns `#t`.
+
+For an example, see [this package][ext example].
+
 ## Emacs/flycheck support
 
 Add the following snippet to your `init.el` to define a Flycheck
@@ -78,24 +96,6 @@ Or install the Emacs plugin from the `elisp` directory:
 ```shell
 (cd elisp && make install)
 ```
-
-## Adding Custom Rules
-
-**Note: this protocol is currently experimental and subject to change.
-If you use it in your own packages, please let me know.**
-
-A package may declare its own linting rules by providing a `review-exts`
-definition in its top-level `info.rkt` file. Each `review-exts`
-definition is a list of triples, where the first value is an absolute
-module path, the second is the name of a predicate procedure provided by
-that module, and the third is the name of a linting procedure provided
-by that module.
-
-Both the predicate and the linting procedure must take a single syntax
-object as argument. The linting procedure is called on a piece of syntax
-whenever the predicate procedure returns `#t`.
-
-For an example, see [this package][ext example].
 
 ## Prior work
 
