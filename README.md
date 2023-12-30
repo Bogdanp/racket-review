@@ -79,6 +79,21 @@ Or install the Emacs plugin from the `elisp` directory:
 (cd elisp && make install)
 ```
 
+## Adding Custom Rules
+
+A package may declare its own linting rules by providing a `review-exts`
+definition in its top-level `info.rkt` file. Each `review-exts`
+definition is a list of triples, where the first value is an absolute
+module path, the second is the name of a predicate procedure provided by
+that module, and the third is the name of a linting procedure provided
+by that module.
+
+Both the predicate and the linting procedure must take a single syntax
+object as argument. The linting procedure is called on a piece of syntax
+whenever the predicate procedure returns `#t`.
+
+For an example, see [this package][ext example].
+
 ## Prior work
 
 * http://planet.racket-lang.org/package-source/clements/no-brainer.plt/1/5/
@@ -88,3 +103,5 @@ Or install the Emacs plugin from the `elisp` directory:
 ## License
 
     racket-review is licensed under the 3-Clause BSD license.
+
+[ext example]: https://github.com/Bogdanp/Noise/tree/70dd4146e1f20561ef93433032ef9f26d886c23a/Racket/noise-serde-lint-lib

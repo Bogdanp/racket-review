@@ -2,14 +2,19 @@
 
 #|review: ignore|#
 
-(require racket/contract
+(require racket/contract/base
+         racket/contract/region
          racket/format
          racket/function
          racket/list
+         racket/match
          racket/string
          racket/syntax
+         setup/getinfo
          syntax/modread
-         syntax/parse)
+         syntax/parse/pre
+         (submod "ext.rkt" private)
+         (only-in "ext.rkt" current-reviewer))
 
 (provide
  (struct-out problem)
@@ -274,7 +279,8 @@
 (define related-provided
   (make-parameter null))
 
-(define all-bindings-provided? #f)
+(define all-bindings-provided?
+  (make-parameter #f))
 
 (define (track-provided! name)
   (provided-bindings (cons name (provided-bindings))))
@@ -283,7 +289,7 @@
   (related-provided (cons name (related-provided))))
 
 (define (track-all-provided!)
-  (set! all-bindings-provided? #t))
+  (all-bindings-provided? #t))
 
 (define (check-provided-bindings!)
   (for ([binding:stx (provided-bindings)])
@@ -292,7 +298,7 @@
       (track-error! binding:stx (~a "identifier '" binding:id "' provided but not defined")))))
 
 (define (binding-provided? name)
-  (or all-bindings-provided?
+  (or (all-bindings-provided?)
       (for/first ([binding:stx (provided-bindings)]
                   #:when (eq? name (syntax->datum binding:stx)))
         #t)))
@@ -681,13 +687,7 @@
            #:do [(for ([_ (in-range (add1 (attribute hdr.depth)))])
                    (pop-scope!))]))
 
-;; TODO:
-;;  * for-label
-;;  * combine-in
-;;  * except-in
-;;  * rename-in
-(define-syntax-class require-spec
-  #:datum-literals (for-syntax prefix-in)
+(define-syntax-class root-module-path
   (pattern mod:id
            #:with t 'absolute
            #:with s (symbol->string (syntax-e #'mod))
@@ -699,16 +699,25 @@
                     (track-warning! #'mod "prefer syntax/parse/pre if possible")])])
   (pattern mod:string
            #:with t 'relative
-           #:with s #'mod)
+           #:with s #'mod))
+
+(define-syntax-class require-spec
+  #:datum-literals (for-syntax only-in except-in prefix-in)
+  (pattern mod:root-module-path
+           #:with t #'mod.t
+           #:with s #'mod.s)
   (pattern (for-syntax e:require-spec ...)
            #:with t 'syntax
            #:with s "")
-  (pattern (prefix-in prefix:id mod:id)
-           #:with t 'absolute
-           #:with s (symbol->string (syntax-e #'mod)))
-  (pattern (prefix-in prefix:id mod:string)
-           #:with t 'relative
-           #:with s #'mod))
+  (pattern (only-in spec:require-spec id ...)
+           #:with t #'spec.t
+           #:with s #'spec.s)
+  (pattern (except-in spec:require-spec id ...)
+           #:with t #'spec.t
+           #:with s #'spec.s)
+  (pattern (prefix-in prefix:id spec:require-spec)
+           #:with t #'spec.t
+           #:with s #'spec.s))
 
 (define-syntax-class require-statement
   #:datum-literals (require)
@@ -831,8 +840,40 @@
                              (track-binding! stx (string-append (symbol->string (format-binding "update-~a" #'name)) "-~a") #:check-usages? #f))
                            (syntax-e #'(spec.name ...)))]))
 
+(define extensions
+  (for*/list ([path (find-relevant-directories '(review-exts))]
+              [bind (in-list ((get-info/full path) 'review-exts))])
+    (match-define (list mod predicate-id extension-id) bind)
+    (cons
+     (dynamic-require mod predicate-id)
+     (dynamic-require mod extension-id))))
+
+(define (find-extension stx)
+  (findf (λ (ext) ((car ext) stx)) extensions))
+
+(define-syntax-class extension
+  (pattern e
+           #:when (find-extension this-syntax)
+           #:do [(with-handlers ([exn:fail?
+                                  (lambda (e)
+                                    ((error-display-handler)
+                                     (exn-message e)
+                                     e))])
+                   (parameterize ([current-reviewer
+                                   (reviewer
+                                    (λ (stx)
+                                      (syntax-parse stx
+                                        [e:expression #'e]))
+                                    track-error!
+                                    track-warning!
+                                    track-binding!
+                                    push-scope!
+                                    pop-scope!)])
+                     ((cdr (find-extension this-syntax)) this-syntax)))]))
+
 (define-syntax-class expression
   #:commit
+  (pattern ext:extension)
   (pattern d:definition)
   (pattern s:struct-definition)
   (pattern l:lambda-expression)
