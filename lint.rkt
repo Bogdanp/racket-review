@@ -690,12 +690,17 @@
   #:datum-literals (for-syntax prefix-in)
   (pattern mod:id
            #:with t 'absolute
-           #:with s (symbol->string (syntax-e #'mod)))
+           #:with s (symbol->string (syntax-e #'mod))
+           #:do [(define mod-sym (syntax->datum #'mod))
+                 (case mod-sym
+                   [(racket/contract)
+                    (track-warning! #'mod "prefer racket/contract/base if possible")]
+                   [(syntax/parse)
+                    (track-warning! #'mod "prefer syntax/parse/pre if possible")])])
   (pattern mod:string
            #:with t 'relative
            #:with s #'mod)
-  ;; TODO: dive into these.
-  (pattern (for-syntax e ...)
+  (pattern (for-syntax e:require-spec ...)
            #:with t 'syntax
            #:with s "")
   (pattern (prefix-in prefix:id mod:id)

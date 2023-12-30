@@ -1,0 +1,2 @@
+/imports.rkt:4:22:warning:prefer syntax/parse/pre if possible
+/imports.rkt:5:10:warning:prefer racket/contract/base if possible
