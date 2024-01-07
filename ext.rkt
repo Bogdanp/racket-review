@@ -3,6 +3,8 @@
 (require (for-syntax racket/base)
          syntax/parse/pre)
 
+;; indirection ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (provide
  current-reviewer)
 
@@ -38,14 +40,14 @@
   {push-scope reviewer-push-scope-proc}
   {pop-scope reviewer-pop-scope-proc})
 
-(provide
- define-expression-syntax-class)
-
-(define-syntax (define-expression-syntax-class stx)
-  (syntax-case stx ()
-    [(_ id)
-     #'(define-syntax-class id
-         (pattern e #:do [(recur this-syntax)]))]))
-
 (module+ private
   (provide (struct-out reviewer)))
+
+
+;; syntax classes ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(provide
+ expression)
+
+(define-syntax-class expression
+  (pattern e #:do [(recur this-syntax)]))
