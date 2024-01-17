@@ -1,0 +1,11 @@
+/contracts.rkt:6:21:warning:identifier 'x' is never used
+/contracts.rkt:6:23:warning:identifier 'y' is never used
+/contracts.rkt:6:26:warning:identifier 's' is never used
+/contracts.rkt:7:7:warning:contract domain expressions should use round parens; did you mean to use ->*?
+/contracts.rkt:7:43:warning:contract domain expressions should use round parens; did you mean to use ->*?
+/contracts.rkt:10:21:warning:identifier 'a' is never used
+/contracts.rkt:10:21:warning:identifier 'a' shadows an earlier binding
+/contracts.rkt:10:24:warning:identifier 'b' is never used
+/contracts.rkt:10:24:warning:identifier 'b' shadows an earlier binding
+/contracts.rkt:11:8:warning:mandatory domain parens should be square
+/contracts.rkt:12:8:warning:optional domain parens should be square

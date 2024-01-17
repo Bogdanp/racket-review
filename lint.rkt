@@ -321,6 +321,46 @@
 
   (string->symbol (apply format fmt args:strs)))
 
+(define-syntax-class contract-arrow-dom-expression
+  (pattern (rator:expression ~! rand:expression ...)
+           #:do [(when (syntax-property this-syntax 'paren-shape)
+                   (unless (eq? (syntax-property this-syntax 'paren-shape) #\()
+                     (track-warning! this-syntax "contract domain expressions should use round parens; did you mean to use ->*?")))])
+  (pattern expr:expression))
+
+(define-splicing-syntax-class contract-arrow-dom
+  (pattern {~seq kwd:keyword expr:contract-arrow-dom-expression})
+  (pattern expr:contract-arrow-dom-expression))
+
+(define-syntax-class contract-arrow-mandatory-dom
+  (pattern [dom:contract-arrow-dom ...]
+           #:do [(unless (eq? (syntax-property this-syntax 'paren-shape) #\[)
+                   (track-warning! this-syntax "mandatory domain parens should be square"))]))
+
+(define-syntax-class contract-arrow-optional-dom
+  (pattern [dom:contract-arrow-dom ...]
+           #:do [(unless (eq? (syntax-property this-syntax 'paren-shape) #\[)
+                   (track-warning! this-syntax "optional domain parens should be square"))] ))
+
+(define-syntax-class contract-arrow-range
+  #:datum-literals (any values)
+  (pattern any)
+  (pattern (values ~! e:expression ...))
+  (pattern e:expression))
+
+(define-syntax-class contract-arrow-expression
+  #:datum-literals (-> ->*)
+  (pattern (-> dom:contract-arrow-dom ... range-expr:contract-arrow-range))
+  (pattern (-> dom:contract-arrow-dom ... {~datum ...} dom-expr:contract-arrow-dom-expression ... range-expr:contract-arrow-range))
+  (pattern (->* mandatory-dom:contract-arrow-mandatory-dom
+                {~optional optional-dom:contract-arrow-optional-dom}
+                {~optional {~seq #:rest rest-expr:expression}}
+                {~optional {~or {~seq #:pre pre-cond-expr:expression}
+                                {~seq #:pre/desc pre-cond-expr:expression}}}
+                range:contract-arrow-range
+                {~optional {~or {~seq #:post post-cond-expr:expression}
+                                {~seq #:post/desc post-cond-expr:expression}}})))
+
 (define-syntax-class application-expression
   (pattern (e0:expression ~! e:expression ...)))
 
@@ -883,6 +923,7 @@
   (pattern l:let-expression)
   (pattern f:for-expression)
   (pattern s:scoping-expression)
+  (pattern c:contract-arrow-expression)
   (pattern a:application-expression)
   (pattern I:identifier-expression)
   (pattern S:string)
