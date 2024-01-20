@@ -9,3 +9,4 @@
 /contracts.rkt:10:24:warning:identifier 'b' shadows an earlier binding
 /contracts.rkt:11:8:warning:mandatory domain parens should be square
 /contracts.rkt:12:8:warning:optional domain parens should be square
+/contracts.rkt:16:1:warning:prefer #f over false/c

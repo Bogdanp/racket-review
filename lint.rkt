@@ -366,7 +366,9 @@
 
 (define-syntax-class identifier-expression
   (pattern id:id
-           #:do [(track-binding-usage! (format-binding "~a" #'id))]))
+           #:do [(track-binding-usage! (format-binding "~a" #'id))
+                 (when (eq? (syntax->datum #'id) 'false/c)
+                   (track-warning! this-syntax "prefer #f over false/c"))]))
 
 (define-syntax-class lambda-expression
   #:datum-literals (lambda λ)

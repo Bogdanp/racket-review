@@ -12,3 +12,5 @@
        ((or/c #f number?))
        any)
   (void))
+
+false/c
