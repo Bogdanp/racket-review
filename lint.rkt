@@ -716,17 +716,19 @@
            #:do [(pop-scope!)
                  (pop-scope!)])
 
-  (pattern (_:define-like
+  (pattern (define-id:define-like
             name:define-identifier
             ~!
-            e:expression ...+))
+            e:expression ...+)
+           #:do [(track-binding-usage! (format-binding "~a" #'define-id))])
 
-  (pattern (_:define-like
+  (pattern (define-id:define-like
             hdr:function-header
             ~!
             (~do (push-scope!))
             e:expression ...+)
-           #:do [(for ([_ (in-range (add1 (attribute hdr.depth)))])
+           #:do [(track-binding-usage! (format-binding "~a" #'define-id))
+                 (for ([_ (in-range (add1 (attribute hdr.depth)))])
                    (pop-scope!))]))
 
 (define-syntax-class root-module-path
