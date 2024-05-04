@@ -1,0 +1,2 @@
+/match-define.rkt:7:20:warning:identifier 'a' is never used
+/match-define.rkt:7:22:warning:identifier 'b' is never used

@@ -435,28 +435,43 @@
                  (unless (eq? (last (syntax->datum #'(c ...))) 'else)
                    (track-warning! this-syntax "this cond expression does not have an else clause"))]))
 
-(define-syntax-class match-clause
-  #:datum-literals (else null empty)
-  (pattern else #:do [(track-error! this-syntax "use _ instead of else in the fallthrough case of a match expression")])
+(define-syntax-class match-pattern
+  #:datum-literals (_ else null empty)
+  (pattern _)
+  (pattern else
+           #:do [(track-error! this-syntax "use _ instead of else in the fallthrough case of a match expression")])
   (pattern {~or* null empty}
            #:do [(track-error! this-syntax "use '() for match pattern instead of null or empty")])
-  (pattern c))
+  (pattern (struct-id:id arg:match-pattern ...)
+           #:do [(cond
+                   ;; We don't know for sure that this is a struct
+                   ;; binding, but this is good enough for now.
+                   [(bindings-ref (format-binding "~a" #'struct-id))
+                    => (lambda (bi)
+                         (track-binding-usage! (format-binding "~a" #'struct-id))
+                         (for ([stx (in-list (binding-info-related-stxes bi))])
+                           (track-binding-usage! (format-binding "~a" stx))))])])
+  (pattern id:id #:do [(track-binding! #'id)])
+  (pattern e))
 
 (define-syntax-class match-expression
-  #:datum-literals (match match-lambda)
-  (pattern (match
-               ~!
+  #:datum-literals (match match-define match-lambda)
+  (pattern (match-define ~!
+             dpat:match-pattern
+             de:expression))
+
+  (pattern (match ~!
              e:expression
-             [clause:match-clause
-              (~do (push-scope!))
+             [{~do (push-scope!)}
+              pat:match-pattern
               ce:expression ...+
-              (~do (pop-scope!))] ...+))
+              {~do (pop-scope!)}] ...+))
 
   (pattern (match-lambda
-             [clause:match-clause
-              (~do (push-scope!))
+             [{~do (push-scope!)}
+              pat:match-pattern
               ce:expression ...+
-              (~do (pop-scope!))] ...+)))
+              {~do (pop-scope!)}] ...+)))
 
 (define-syntax-class if-expression
   #:datum-literals (begin if let)
@@ -723,7 +738,7 @@
              hdr:function-header
              ~!
              (~do (push-scope!))
-             c:match-clause ...+)
+             c:match-pattern ...+)
            #:do [(for ([_ (in-range (add1 (attribute hdr.depth)))])
                    (pop-scope!))])
 
