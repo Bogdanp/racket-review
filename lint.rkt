@@ -436,12 +436,13 @@
                    (track-warning! this-syntax "this cond expression does not have an else clause"))]))
 
 (define-syntax-class match-pattern
-  #:datum-literals (_ else null empty)
+  #:datum-literals (_ app else null empty)
   (pattern _)
   (pattern else
            #:do [(track-error! this-syntax "use _ instead of else in the fallthrough case of a match expression")])
   (pattern {~or* null empty}
            #:do [(track-error! this-syntax "use '() for match pattern instead of null or empty")])
+  (pattern (app e:expression arg:match-pattern))
   (pattern (struct-id:id arg:match-pattern ...)
            #:do [(cond
                    ;; We don't know for sure that this is a struct
