@@ -371,7 +371,7 @@
                    (track-warning! this-syntax "prefer #f over false/c"))]))
 
 (define-syntax-class lambda-expression
-  #:datum-literals (lambda λ)
+  #:datum-literals (case-lambda lambda λ)
   (pattern ((~or lambda λ) args:define-identifier/new-scope
              e0:expression ...+
              (~do (pop-scope!))))
@@ -386,7 +386,23 @@
                (~do (undo!))
                ((~seq (~optional k:keyword) arg:function-argument) ... . vararg:function-argument)))
              e1:expression ...+
-             (~do (pop-scope!)))))
+             (~do (pop-scope!))))
+
+  (pattern (case-lambda
+             [{~do (push-scope!)}
+              {~or
+               {~and
+                {~do (save!)}
+                (arg:define-identifier ...)}
+               {~and
+                {~do (undo!)}
+                {~do (save!)}
+                (arg:define-identifier ...+ . vararg:define-identifier)}
+               {~and
+                {~do (undo!)}
+                vararg:define-identifier}}
+              e2:expression ...+
+              {~do (pop-scope!)}] ...)))
 
 (define-syntax-class case-clause
   #:datum-literals (quote quasiquote else)
