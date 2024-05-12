@@ -22,3 +22,7 @@
 (match foo
   [null 1]
   [_ 2])
+
+(match foo
+  [(? eof-object?) void]
+  [(or (? eof-object?) foo) (void)])
