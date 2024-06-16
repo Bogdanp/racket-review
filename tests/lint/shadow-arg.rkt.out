@@ -1,0 +1,3 @@
+/shadow-arg.rkt:5:10:warning:identifier 'request' is never used
+/shadow-arg.rkt:5:19:warning:identifier 'method' is never used
+/shadow-arg.rkt:5:19:warning:identifier 'method' shadows an earlier binding

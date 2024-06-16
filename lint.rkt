@@ -646,7 +646,13 @@
 (define-syntax-class function-argument
   #:commit
   (pattern arg:define-identifier)
-  (pattern [arg:define-identifier default:expression]))
+  (pattern [arg:id default:expression]
+           ;; This pattern must call define identifier _after_ the
+           ;; default expression is linted to avoid adding an identifier
+           ;; to the current scope that could potentially shadow an
+           ;; identifier used by the default expression. See the
+           ;; "shadow-arg.rkt" test.
+           #:do [(define-identifier! #'arg)]))
 
 (define-syntax-class function-header
   #:commit
