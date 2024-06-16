@@ -435,8 +435,18 @@
                  (unless (eq? (last (syntax->datum #'(c ...))) 'else)
                    (track-warning! this-syntax "this cond expression does not have an else clause"))]))
 
+(define (try-track-struct-usage! struct-id-stx)
+  (cond
+    ;; We don't know for sure that this is a struct
+    ;; binding, but this is good enough for now.
+    [(bindings-ref (format-binding "~a" struct-id-stx))
+     => (lambda (bi)
+          (track-binding-usage! (format-binding "~a" struct-id-stx))
+          (for ([stx (in-list (binding-info-related-stxes bi))])
+            (track-binding-usage! (format-binding "~a" stx))))]))
+
 (define-syntax-class match-pattern
-  #:datum-literals (_ and app else or not null empty ?)
+  #:datum-literals (_ ? and app else empty or not null struct*)
   (pattern _)
   (pattern else
            #:do [(track-error! this-syntax "use _ instead of else in the fallthrough case of a match expression")])
@@ -446,15 +456,10 @@
   (pattern ({~or and or} arg:match-pattern ...))
   (pattern (not arg:match-pattern))
   (pattern (app e:expression arg:match-pattern))
+  (pattern (struct* struct-id:id ([field-id:id field-pattern:match-pattern] ...))
+           #:do [(try-track-struct-usage! #'struct-id)])
   (pattern (struct-id:id arg:match-pattern ...)
-           #:do [(cond
-                   ;; We don't know for sure that this is a struct
-                   ;; binding, but this is good enough for now.
-                   [(bindings-ref (format-binding "~a" #'struct-id))
-                    => (lambda (bi)
-                         (track-binding-usage! (format-binding "~a" #'struct-id))
-                         (for ([stx (in-list (binding-info-related-stxes bi))])
-                           (track-binding-usage! (format-binding "~a" stx))))])])
+           #:do [(try-track-struct-usage! #'struct-id)])
   (pattern id:id #:do [(track-binding! #'id)])
   (pattern e))
 
