@@ -840,7 +840,7 @@
            #:do [(track-error! #'e "not an identifier")]))
 
 (define-syntax-class provide-spec
-  #:datum-literals (all-defined-out contract-out rename-out struct struct-out)
+  #:datum-literals (all-defined-out contract-out rename rename-out struct struct-out)
   (pattern id:id
            #:do [(track-provided! #'id)])
 
@@ -849,8 +849,9 @@
 
   (pattern (contract-out
             ~!
-            (~do (push-scope!)) ;; push a scope here so bindings are punted on
-            [(~optional struct) name:id e:expression] ...)
+            {~do (push-scope!)} ;; push a scope here so bindings are punted on
+            {~or* [{~optional struct} name:id e:expression]
+                  [rename name:id provided-name:id e:expression]} ...)
            #:do [(for-each track-provided! (syntax-e #'(name ...)))
                  (pop-scope!)])
 
