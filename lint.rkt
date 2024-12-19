@@ -853,6 +853,7 @@
             {~or* [{~optional struct} name:id e:expression]
                   [rename name:id provided-name:id e:expression]} ...)
            #:do [(for-each track-provided! (syntax-e #'(name ...)))
+                 (for-each track-related-provided! (syntax-e #'(name ...)))
                  (pop-scope!)])
 
   (pattern (rename-out ~! [to-rename-id:id renamed-id:provide-renamed-id] ...)
