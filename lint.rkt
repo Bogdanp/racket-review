@@ -780,6 +780,26 @@
                  (for ([_ (in-range (add1 (attribute hdr.depth)))])
                    (pop-scope!))]))
 
+(define (check-requires-sorted stxs mod-stxs type-stxs)
+  (for ([m1 (in-list (syntax->datum mod-stxs))]
+        [t1 (in-list (syntax->datum type-stxs))]
+        [s1 (in-list (syntax-e stxs))]
+        [m2 (in-list (cdr (syntax->datum mod-stxs)))]
+        [t2 (in-list (cdr (syntax->datum type-stxs)))]
+        [s2 (in-list (cdr (syntax-e stxs)))])
+    (cond
+      [(and (eq? t2 'syntax)
+            (not (eq? t1 t2)))
+       (track-warning! s2 (format "require (for-syntax ...) should come before all others"))]
+
+      [(and (eq? t1 'relative)
+            (eq? t2 'absolute))
+       (track-warning! s1 (format "require ~.s should come after ~.s" m1 m2))]
+
+      [(and (eq? t1 t2)
+            (string<? m2 m1))
+       (track-warning! s2 (format "require ~.s should come before ~.s" m2 m1))])))
+
 (define-syntax-class root-module-path
   (pattern mod:id
            #:with t 'absolute
@@ -795,7 +815,7 @@
            #:with s #'mod))
 
 (define-syntax-class require-spec
-  #:datum-literals (for-syntax only-in except-in prefix-in)
+  #:datum-literals (for-syntax only-in except-in prefix-in combine-in)
   (pattern mod:root-module-path
            #:with t #'mod.t
            #:with s #'mod.s)
@@ -810,29 +830,26 @@
            #:with s #'spec.s)
   (pattern (prefix-in prefix:id spec:require-spec)
            #:with t #'spec.t
-           #:with s #'spec.s))
+           #:with s #'spec.s)
+  (pattern (combine-in)
+           #:with t 'absolute
+           #:with s ""
+           #:do [(track-warning! this-syntax "empty combine-in")])
+  (pattern (combine-in spec0:require-spec spec:require-spec ...)
+           #:with t #'spec0.t
+           #:with s #'spec0.s
+           #:do [(check-requires-sorted
+                  #'(spec0 spec ...)
+                  #'(spec0.s spec.s ...)
+                  #'(spec0.t spec.t ...))]))
 
 (define-syntax-class require-statement
   #:datum-literals (require)
   (pattern (require e:require-spec ...+)
-           #:do [(for ([m1 (in-list (syntax->datum #'(e.s ...)))]
-                       [s1 (in-list (syntax-e #'(e ...)))]
-                       [t1 (in-list (syntax->datum #'(e.t ...)))]
-                       [m2 (in-list (drop (syntax->datum #'(e.s ...)) 1))]
-                       [t2 (in-list (drop (syntax->datum #'(e.t ...)) 1))]
-                       [s2 (in-list (drop (syntax-e #'(e ...)) 1))])
-                   (cond
-                     [(and (eq? t2 'syntax)
-                           (not (eq? t1 t2)))
-                      (track-warning! s2 (format "require (for-syntax ...) should come before all others"))]
-
-                     [(and (eq? t1 'relative)
-                           (eq? t2 'absolute))
-                      (track-warning! s1 (format "require ~.s should come after ~.s" m1 m2))]
-
-                     [(and (eq? t1 t2)
-                           (string<? m2 m1))
-                      (track-warning! s2 (format "require ~.s should come before ~.s" m2 m1))]))]))
+           #:do [(check-requires-sorted
+                  #'(e ...)
+                  #'(e.s ...)
+                  #'(e.t ...))]))
 
 (define-syntax-class provide-renamed-id
   (pattern id:id)

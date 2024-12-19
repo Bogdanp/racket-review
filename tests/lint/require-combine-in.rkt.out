@@ -1,0 +1,4 @@
+/require-combine-in.rkt:3:10:warning:empty combine-in
+/require-combine-in.rkt:9:10:warning:require "racket/string" should come before "threading"
+/require-combine-in.rkt:12:43:warning:require "racket/base" should come before "threading"
+/require-combine-in.rkt:13:10:warning:require "racket/string" should come before "threading"
