@@ -158,15 +158,29 @@
 (define current-scope
   (make-parameter (make-scope #f (make-hash))))
 
+(define current-stashed-scope
+  (make-parameter #f))
+
 (define current-punted-bindings  ;; name -> (listof scope)
   (make-parameter (hash)))
 
 (define (push-scope!)
   (current-scope (make-scope (current-scope) (make-hash))))
 
-(define (pop-scope!)
-  (check-unused-bindings!)
+(define (pop-scope! [check-bindings? #t])
+  (when check-bindings?
+    (check-unused-bindings!))
   (current-scope (scope-parent (current-scope))))
+
+(define (stash-scope!)
+  (current-stashed-scope (current-scope))
+  (pop-scope! #f))
+
+(define (restore-scope!)
+  (unless (current-stashed-scope)
+    (error 'restore-scope! "no stashed scope"))
+  (current-scope (current-stashed-scope))
+  (current-stashed-scope #f))
 
 (define (bindings-ref name)
   (let loop ([scope (current-scope)])
@@ -605,14 +619,14 @@
 
   (pattern ((~or for/fold for*/fold)
             ~!
-            (~do (push-scope!))
+            (~do (push-scope!)
+                 (push-scope!))
             (accum-id:define-for-clause ... (~optional (~seq #:result result-e:expression)))
-            (~do (push-scope!))
+            (~do (stash-scope!))
             ((~or clause:define-for-clause kwd-clause:for-keyword) ...)
-            (~do (push-scope!))
+            (~do (restore-scope!))
             (~or (~seq (~or #:break #:final) break-e:expression) body:expression) ...
             (~do (pop-scope!)
-                 (pop-scope!)
                  (pop-scope!)))
            #:do [(when (null? (syntax-e #'(body ...)))
                    (track-error! this-syntax "for forms must contain at least one body expression"))])
