@@ -427,7 +427,7 @@
   (pattern (_ ...)))
 
 (define-syntax-class cond-expression
-  #:datum-literals (=> case cond)
+  #:datum-literals (=> case cond unless when)
   (pattern (case
              ~!
              ce:expression
@@ -447,7 +447,12 @@
                    (unless (eq? (syntax-property clause-stx 'paren-shape) #\[)
                      (track-warning! clause-stx "this cond clause should be surrounded by square brackets")))
                  (unless (eq? (last (syntax->datum #'(c ...))) 'else)
-                   (track-warning! this-syntax "this cond expression does not have an else clause"))]))
+                   (track-warning! this-syntax "this cond expression does not have an else clause"))])
+
+  (pattern ({~or unless when} uc:expression
+             {~do (push-scope!)}
+             ue:expression ...+
+             {~do (pop-scope!)})))
 
 (define (try-track-struct-usage! struct-id-stx)
   (cond
