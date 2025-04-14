@@ -998,6 +998,7 @@
                                     track-error!
                                     track-warning!
                                     track-binding!
+                                    try-track-struct-usage!
                                     push-scope!
                                     pop-scope!)])
                      ((cdr (find-extension this-syntax)) this-syntax)))]))

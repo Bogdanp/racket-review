@@ -13,6 +13,7 @@
    track-error-proc
    track-warning-proc
    track-binding-proc
+   track-struct-usage-proc
    push-scope-proc
    pop-scope-proc))
 
@@ -37,6 +38,7 @@
   {track-error reviewer-track-error-proc}
   {track-warning reviewer-track-warning-proc}
   {track-binding reviewer-track-binding-proc}
+  {track-struct-usage reviewer-track-struct-usage-proc}
   {push-scope reviewer-push-scope-proc}
   {pop-scope reviewer-pop-scope-proc})
 
