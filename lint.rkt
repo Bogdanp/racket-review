@@ -578,6 +578,7 @@
                    (track-binding! id-stx))]))
 
 (define-splicing-syntax-class for-keyword
+  (pattern (~seq #:do [do-e:expression ...]))
   (pattern (~seq (~or #:when #:unless #:break #:final) e:expression)))
 
 (define-syntax-class for-expression
