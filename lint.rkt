@@ -780,8 +780,11 @@
 
   (pattern (_:class-define name:id ~! e:expression))
   (pattern (_:class-define
-            (name:id ~! {~do (push-scope!)} arg:function-argument ...)
-            (~do (push-scope!))
+            (name:id
+             ~!
+             {~do (push-scope!)}
+             {~seq {~optional kwd:keyword} arg:function-argument} ...)
+            {~do (push-scope!)}
             e:expression ...+)
            #:do [(pop-scope!)
                  (pop-scope!)])
