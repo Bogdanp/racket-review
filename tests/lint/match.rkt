@@ -26,3 +26,7 @@
 (match foo
   [(? eof-object?) void]
   [(or (? eof-object?) foo) (void)])
+
+(match (list 1 2)
+  [`(1 ,a) void]
+  [`,b void])

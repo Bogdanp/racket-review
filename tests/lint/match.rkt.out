@@ -1,3 +1,5 @@
 /match.rkt:9:12:warning:identifier 'foo' shadows an earlier binding
 /match.rkt:23:4:error:use '() for match pattern instead of null or empty
 /match.rkt:28:24:warning:identifier 'foo' is never used
+/match.rkt:31:9:warning:identifier 'a' is never used
+/match.rkt:32:6:warning:identifier 'b' is never used
