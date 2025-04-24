@@ -1045,6 +1045,12 @@
              (#%module-begin ~! e:toplevel ...))
            #:do [(check-unused-bindings!)])
 
+  ;; TODO: Save and restore provided-bindings.
+  (pattern (module ~! name:id path:id
+                   {~do (push-scope!)}
+                   e:toplevel ...
+                   {~do (pop-scope!)}))
+
   (pattern (module+ ~!
              name:id
              (~do (push-scope!))
