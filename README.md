@@ -60,9 +60,6 @@ line with one of the following comments:
 
 ## Adding Custom Rules
 
-**Note: this protocol is currently experimental and subject to change.
-If you use it in your own packages, please let me know.**
-
 A package may declare its own linting rules by providing a `review-exts`
 definition in its top-level `info.rkt` file. Each `review-exts`
 definition is a list of triples, where the first value is an absolute
@@ -74,7 +71,8 @@ Both the predicate and the linting procedure must take a single syntax
 object as argument. The linting procedure is called on a piece of syntax
 whenever the predicate procedure returns `#t`.
 
-For an example, see [this package][ext example].
+For an example, see [this package][ext example] and [this blog
+post][ext blog post].
 
 ## Emacs/flycheck support
 
@@ -109,5 +107,6 @@ Or install the Emacs plugin from the `elisp` directory:
 
     racket-review is licensed under the 3-Clause BSD license.
 
-[ext example]: https://github.com/Bogdanp/Noise/tree/70dd4146e1f20561ef93433032ef9f26d886c23a/Racket/noise-serde-lint-lib
+[ext example]: https://github.com/Bogdanp/Noise/tree/48cd8359d49ca586b97832fc76fce505b9ec6364/Racket/noise-serde-lint-lib
+[ext blog post]: https://defn.io/2024/01/07/extensible-racket-linting/
 [extensions]: https://pkgd.racket-lang.org/pkgn/search?tags=linter
