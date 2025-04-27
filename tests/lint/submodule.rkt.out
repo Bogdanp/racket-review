@@ -1,1 +1,4 @@
-/submodule.rkt:7:10:error:identifier 'x' provided but not defined
+/submodule.rkt:8:12:warning:identifier 'y' provided but not defined
+/submodule.rkt:10:14:warning:identifier 'x' shadows an earlier binding
+/submodule.rkt:15:12:warning:identifier 'non-empty-string?' provided but not defined
+/submodule.rkt:17:10:warning:identifier 'x' provided but not defined

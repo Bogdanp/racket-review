@@ -3,7 +3,8 @@
 (require racket/cmdline
          racket/format
          raco/command-name
-         "lint.rkt")
+         "lint.rkt"
+         "problem.rkt")
 
 (define (report-problem p)
   (define-values (source line column)

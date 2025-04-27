@@ -8,38 +8,18 @@
          racket/function
          racket/list
          racket/match
+         racket/runtime-path
          racket/string
          racket/syntax
          setup/getinfo
          syntax/modread
          syntax/parse/pre
          (submod "ext.rkt" private)
-         (only-in "ext.rkt" current-reviewer))
+         (only-in "ext.rkt" current-reviewer)
+         "problem.rkt")
 
 (provide
- (struct-out problem)
- problem<?
- problem-loc
  lint)
-
-(struct problem (stx level message)
-  #:transparent)
-
-(define (problem<? a b)
-  (define-values (_source-a line-a column-a) (problem-loc a))
-  (define-values (_source-b line-b column-b) (problem-loc b))
-  (if (= line-a line-b)
-      (< column-a column-b)
-      (< line-a line-b)))
-
-(define (problem-loc p)
-  (define stx (problem-stx p))
-  (if (srcloc? stx)
-      (values (srcloc-source stx) (srcloc-line stx) (srcloc-column stx))
-      (values (syntax-source stx) (syntax-line stx) (syntax-column stx))))
-
-(define current-problem-list
-  (make-parameter null))
 
 (define ignore-all-re #rx"#\\|review: ignore\\|#")
 (define ignore-line-re #rx";; (noqa|lint: ignore|review: ignore)$")
@@ -118,6 +98,28 @@
     [e
      (track-warning! stx "missing module (#lang) declaration")
      #'e]))
+
+(define (lint-submodule-syntax! stx)
+  (syntax-parse stx
+    #:datum-literals (module)
+    [(module ~! _name _path _e:toplevel ...)
+     (check-provided-bindings!)
+     #'module]))
+
+(define-runtime-module-path-index problem.rkt
+  "problem.rkt")
+
+;; Lint submodules in a fresh instance of this module, that way we don't
+;; have to spend any code stacking states around. The instances share
+;; problem.rkt, so the problem list itself is shared.
+(define (lint-submodule-syntax!/trampoline stx)
+  (define ns (current-namespace))
+  (parameterize ([current-namespace (make-base-empty-namespace)])
+    (namespace-attach-module ns (module-path-index-resolve problem.rkt))
+    ((dynamic-require '(submod review/lint private) 'lint-submodule-syntax!) stx)))
+
+(module+ private
+  (provide lint-submodule-syntax!))
 
 
 ;; scope ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -309,7 +311,7 @@
   (for ([binding:stx (provided-bindings)])
     (define binding:id (syntax->datum binding:stx))
     (unless (name-bound? binding:id)
-      (track-error! binding:stx (~a "identifier '" binding:id "' provided but not defined")))))
+      (track-warning! binding:stx (~a "identifier '" binding:id "' provided but not defined")))))
 
 (define (binding-provided? name)
   (or (all-bindings-provided?)
@@ -1041,18 +1043,15 @@
 
 (define-syntax-class module
   #:datum-literals (module module+ #%module-begin)
-  (pattern (module name:id path:id
-             (#%module-begin ~! e:toplevel ...))
+  (pattern (module _name:id _path:id
+             (#%module-begin ~! _e:toplevel ...))
            #:do [(check-unused-bindings!)])
 
-  ;; TODO: Save and restore provided-bindings.
-  (pattern (module ~! name:id path:id
-                   {~do (push-scope!)}
-                   e:toplevel ...
-                   {~do (pop-scope!)}))
+  (pattern (module ~! _name _path _e ...)
+           #:do [(lint-submodule-syntax!/trampoline this-syntax)])
 
   (pattern (module+ ~!
-             name:id
+             _name:id
              (~do (push-scope!))
-             e:toplevel ...
+             _e:toplevel ...
              (~do (pop-scope!)))))

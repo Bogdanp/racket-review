@@ -14,7 +14,6 @@ racket{,/base}` programs.
 
 It currently reports the following issues:
 
-* `[error]` "identifier * provided but not defined"
 * `[error]` "identifier is already defined"
 * `[error]` "if expressions must contain one expression for the then-branch and another for the else-branch"
 * `[error]` "let forms must contain at least one body expression"
@@ -23,6 +22,7 @@ It currently reports the following issues:
 * `[error]` "case clause must be in the form (<const> ...), not '<const>"
 * `[error]` "use '() for match pattern instead of null or empty"
 * `[warning]` "bindings within a let should be surrounded by square brackets"
+* `[warning]` "identifier * provided but not defined"
 * `[warning]` "identifier * is already defined"
 * `[warning]` "identifier * is never used"
 * `[warning]` "identifier * shadows an earlier binding"
@@ -32,6 +32,8 @@ It currently reports the following issues:
 * `[warning]` "require * should come before *"
 * `[warning]` "this cond expression does not have an else clause"
 * `[warning]` "use a cond expression instead of nesting begin or let inside an if"
+
+Various packages provide [extensions] to these rules.
 
 ## Setup
 
@@ -108,3 +110,4 @@ Or install the Emacs plugin from the `elisp` directory:
     racket-review is licensed under the 3-Clause BSD license.
 
 [ext example]: https://github.com/Bogdanp/Noise/tree/70dd4146e1f20561ef93433032ef9f26d886c23a/Racket/noise-serde-lint-lib
+[extensions]: https://pkgd.racket-lang.org/pkgn/search?tags=linter
