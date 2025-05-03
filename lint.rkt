@@ -844,7 +844,7 @@
            #:with s #'mod))
 
 (define-syntax-class require-spec
-  #:datum-literals (for-syntax only-in except-in prefix-in combine-in)
+  #:datum-literals (combine-in except-in for-syntax only-in prefix-in submod)
   (pattern mod:root-module-path
            #:with t #'mod.t
            #:with s #'mod.s)
@@ -870,7 +870,10 @@
            #:do [(check-requires-sorted
                   #'(spec0 spec ...)
                   #'(spec0.s spec.s ...)
-                  #'(spec0.t spec.t ...))]))
+                  #'(spec0.t spec.t ...))])
+  (pattern (submod spec0:require-spec spec:require-spec ...)
+           #:with t #'spec0.t
+           #:with s #'spec0.s))
 
 (define-syntax-class require-statement
   #:datum-literals (require)
