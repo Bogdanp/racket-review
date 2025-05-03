@@ -1039,17 +1039,20 @@
 
 (define-syntax-class toplevel
   #:commit
-  (pattern m:module)
+  (pattern M:module)
+  (pattern m:submodule)
   (pattern r:require-statement)
   (pattern p:provide-statement)
   (pattern e:expression))
 
 (define-syntax-class module
-  #:datum-literals (module module+ #%module-begin)
+  #:datum-literals (module #%module-begin)
   (pattern (module _name:id _path:id
              (#%module-begin ~! _e:toplevel ...))
-           #:do [(check-unused-bindings!)])
+           #:do [(check-unused-bindings!)]))
 
+(define-syntax-class submodule
+  #:datum-literals (module module+)
   (pattern (module ~! _name _path _e ...)
            #:do [(lint-submodule-syntax!/trampoline this-syntax)])
 
