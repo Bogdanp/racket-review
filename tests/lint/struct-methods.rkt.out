@@ -1,5 +1,1 @@
-/struct-methods.rkt:6:18:warning:identifier 'store?' is never used
-/struct-methods.rkt:7:4:warning:identifier 'store-ref' is never used
-/struct-methods.rkt:11:13:warning:identifier 'store-ref' is never used
-/struct-methods.rkt:11:13:warning:identifier 'store-ref' shadows an earlier binding
 /struct-methods.rkt:12:34:warning:identifier 'ttl' is never used

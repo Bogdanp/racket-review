@@ -522,23 +522,39 @@
                e-then:expression)
            #:do [(track-error! this-syntax "if expressions must contain one expression for the then-branch and another for the else-branch")]))
 
-(define (define-identifier! stx #:check-usages? [check-usages? #t])
+(define (define-identifier!
+          #:check-shadow? [check-shadow? #t]
+          #:check-usages? [check-usages? #t]
+          #:related-to [related-to-stx #f]
+          stx)
   (cond
     [(name-bound-in-current-scope? (syntax->datum stx))
      (track-error! stx (~a "identifier '" (syntax->datum stx) "' is already defined"))]
 
-    [(name-bound? (syntax->datum stx))
+    [(and check-shadow? (name-bound? (syntax->datum stx)))
      (unless (underscores? (syntax->datum stx))
        (track-warning! stx (~a "identifier '" (syntax->datum stx) "' shadows an earlier binding")))
 
-     (track-binding! stx #:check-usages? check-usages?)]
+     (track-binding!
+      #:check-usages? check-usages?
+      #:related-to related-to-stx
+      stx)]
 
     [else
-     (track-binding! stx #:check-usages? check-usages?)]))
+     (track-binding!
+      #:check-usages? check-usages?
+      #:related-to related-to-stx
+      stx)]))
 
 (define-syntax-class define-identifier
   (pattern id:id
            #:do [(define-identifier! #'id)]))
+
+(define-syntax-class (define-identifier* shadow-ok?)
+  (pattern id:id
+           #:do [(define-identifier!
+                   #:check-shadow? (not shadow-ok?)
+                   #'id)]))
 
 (define-syntax-class define-identifier/new-scope
   (pattern id:id
@@ -680,25 +696,34 @@
            ;; "shadow-arg.rkt" test.
            #:do [(define-identifier! #'arg)]))
 
-(define-syntax-class function-header
+;; A user of this pattern must apply (attribute p.pop-scopes!) to pop
+;; all the scopes it may have introduced while walking the nested
+;; function headers.
+(define-syntax-class (function-header shadow-ok?)
   #:commit
-  (pattern fun:define-identifier
+  (pattern {~var fun (define-identifier* shadow-ok?)}
            #:attr name #''fun
-           #:attr depth 0)
+           #:attr depth 0
+           #:attr pop-scopes! void)
 
-  (pattern (~and
-            (~or
-             (~and
-              (~do (save!))
-              (fun:function-header (~do (push-scope!))  ;; must be popped by the user according to depth
-                                   (~seq (~optional k:keyword) arg:function-argument) ...))
-             (~and
-              (~do (undo!))
-              (fun:function-header (~do (push-scope!))  ;; must be popped by the user according to depth
-                                   (~seq (~optional k:keyword) arg:function-argument) ...
-                                   . vararg:define-identifier))))
+  (pattern {~and
+            {~or
+             {~and
+              {~do (save!)}
+              ({~var fun (function-header shadow-ok?)}
+               {~do (push-scope!)}  ;; must be popped by the user according to depth
+               {~seq {~optional k:keyword} arg:function-argument} ...)}
+             {~and
+              {~do (undo!)}
+              ({~var fun (function-header shadow-ok?)}
+               {~do (push-scope!)}  ;; must be popped by the user according to depth
+               {~seq {~optional k:keyword} arg:function-argument} ...
+               . vararg:define-identifier)}}}
            #:attr name (attribute fun.name)
-           #:attr depth (add1 (attribute fun.depth))))
+           #:attr depth (add1 (attribute fun.depth))
+           #:attr pop-scopes! (lambda ()
+                                (for ([_ (in-range (attribute depth))])
+                                  (pop-scope!)))))
 
 (define-syntax-class class-define
   (pattern {~or {~datum define/public}
@@ -747,13 +772,16 @@
   (pattern (define-generics ~! name:id
              (fn-name:id arg:id ...) ...
              e ...)
-           #:do [(define-identifier! (format-id #'name "gen:~a" #'name #:source #'name))
-                 (define-identifier! (format-id #'name "~a?" #'name #:source #'name))
+           #:do [(define gen-id (format-id #'name "gen:~a" #'name #:source #'name))
+                 (define-identifier! gen-id)
+                 (define-identifier!
+                   #:related-to gen-id
+                   (format-id #'name "~a?" #'name #:source #'name) )
                  (for ([fn (in-list (syntax->list #'((fn-name arg ...) ...)))])
                    (define parts (syntax->list fn))
                    (define fn-name (car parts))
                    (define fn-args (cdr parts))
-                   (define-identifier! fn-name)
+                   (define-identifier! #:related-to gen-id fn-name)
 
                    (define generic-found?
                      (for/first ([fn-arg (in-list fn-args)]
@@ -776,12 +804,12 @@
            #:do [(track-binding! #'name "~a-system")])
 
   (pattern (define/match
-             hdr:function-header
+             {~var hdr (function-header #f)}
              ~!
-             (~do (push-scope!))
+             {~do (push-scope!)}
              c:match-pattern ...+)
-           #:do [(for ([_ (in-range (add1 (attribute hdr.depth)))])
-                   (pop-scope!))])
+           #:do [(pop-scope!)
+                 ((attribute hdr.pop-scopes!))])
 
   (pattern (_:class-define name:id ~! e:expression))
   (pattern (_:class-define
@@ -801,13 +829,13 @@
            #:do [(track-binding-usage! (format-binding "~a" #'define-id))])
 
   (pattern (define-id:define-like
-            hdr:function-header
+            {~var hdr (function-header #f)}
             ~!
-            (~do (push-scope!))
+            {~do (push-scope!)}
             e:expression ...+)
            #:do [(track-binding-usage! (format-binding "~a" #'define-id))
-                 (for ([_ (in-range (add1 (attribute hdr.depth)))])
-                   (pop-scope!))]))
+                 (pop-scope!)
+                 ((attribute hdr.pop-scopes!))]))
 
 (define (check-requires-sorted stxs mod-stxs type-stxs)
   (for ([m1 (in-list (syntax->datum mod-stxs))]
@@ -940,22 +968,33 @@
   (pattern (name:id c ...+))
   (pattern ([name:id e:expression] c ...+)))
 
+(define-syntax-class struct-method-definition
+  #:datum-literals (define define/generic)
+  (pattern (define/generic local-id:id method-id:id)
+           #:do [(track-binding! #'local-id)])
+  (pattern (define id:id e:expression)
+           #:do [(track-binding! #'id #:check-usages? #f)])
+  (pattern (define {~var hdr (function-header #t)} body-e:expression ...+)
+           #:do [(define method-name (syntax-e (cadr (syntax-e #'hdr.name))))
+                 (track-binding-usage! method-name)
+                 ((attribute hdr.pop-scopes!))]))
+
 (define-syntax-class struct-definition
   #:datum-literals (serializable-struct serializable-struct/versions struct struct/contract struct++)
   (pattern ((~or serializable-struct
                  serializable-struct/versions
                  struct
                  struct/contract)
-             ~!
-             name:id
-             (~optional super-id:identifier-expression)
-             (~optional version:number)
-             (field:struct-field-spec ...)
-             (~alt {~optional (~seq #:name name-override:id)}
-                   (~and #:mutable struct-mutable)
-                   (~seq #:property P:expression PV:expression)
-                   (~seq #:methods ~! G:identifier-expression md ...)
-                   e) ...)
+            ~!
+            name:id
+            (~optional super-id:identifier-expression)
+            (~optional version:number)
+            (field:struct-field-spec ...)
+            (~alt {~optional (~seq #:name name-override:id)}
+                  (~and #:mutable struct-mutable)
+                  (~seq #:property P:expression PV:expression)
+                  (~seq #:methods ~! G:identifier-expression [md ...])
+                  e) ...)
            #:do [(define name-stx #'{~? name-override name})
                  (track-binding! name-stx)
                  (track-binding! #'name "~a?" #:check-usages? #f #:related-to name-stx)
@@ -967,13 +1006,16 @@
                                (track-binding! stx (string-append "set-" prefix "-~a!") #:related-to name-stx)))
                            (syntax-e #'(field.name ...))
                            (map (compose1 not not syntax-e) (syntax-e #'(field.mutable? ...))))
-                 (for-each (lambda (defs-stx)
-                             (push-scope!)
-                             (for ([def-stx (in-list (syntax-e defs-stx))])
-                               (syntax-parse def-stx
-                                 [d:definition (void)]))
-                             (pop-scope!))
-                           (syntax-e #'(md ... ...)))])
+                 ;; Using try-track-struct-usage! here ensures that G
+                 ;; and all of its related definitions are tracked as
+                 ;; used.
+                 (for ([G-stx (in-list (syntax-e #'(G ...)))])
+                   (define G-sym (syntax-e G-stx))
+                   (try-track-struct-usage! G-sym))
+                 (push-scope!)
+                 (syntax-parse #'(md ... ...)
+                   [(d:struct-method-definition ...) (void)])
+                 (pop-scope!)])
 
   (pattern (struct++
              ~!
