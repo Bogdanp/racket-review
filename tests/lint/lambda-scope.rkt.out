@@ -1,3 +1,5 @@
+/lambda-scope.rkt:3:9:warning:avoid lambda _
+/lambda-scope.rkt:6:9:warning:avoid lambda _
 /lambda-scope.rkt:13:11:warning:identifier 'a' is never used
 /lambda-scope.rkt:16:12:warning:identifier 'b' is never used
 /lambda-scope.rkt:19:12:warning:identifier 'b' is never used

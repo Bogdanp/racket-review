@@ -5,3 +5,6 @@
 
 (lambda (a b . xs)
   (void))
+
+(lambda _
+  (void))

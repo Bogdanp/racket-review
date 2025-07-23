@@ -387,10 +387,18 @@
                    (track-warning! this-syntax "prefer #f over false/c"))]))
 
 (define-syntax-class lambda-expression
-  #:datum-literals (case-lambda lambda λ)
-  (pattern ((~or lambda λ) args:define-identifier/new-scope
-             e0:expression ...+
-             (~do (pop-scope!))))
+  #:datum-literals (case-lambda lambda λ _)
+  (pattern ((~or lambda λ)
+            {~and _ underscore}
+            {~do (push-scope!)}
+            e0:expression ...+
+            {~do (pop-scope!)})
+           #:do [(track-warning! #'underscore "avoid lambda _")])
+
+  (pattern ((~or lambda λ)
+            args:define-identifier/new-scope
+            e0:expression ...+
+            (~do (pop-scope!))))
 
   (pattern ((~or lambda λ)
              (~do (push-scope!))

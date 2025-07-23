@@ -1,4 +1,5 @@
 /punted-bindings.rkt:16:14:warning:identifier 'show' is never used
+/punted-bindings.rkt:19:9:warning:avoid lambda _
 /punted-bindings.rkt:22:12:warning:identifier 'show' is never used
 /punted-bindings.rkt:28:21:warning:identifier 'uri' is never used
 /punted-bindings.rkt:28:25:warning:identifier 'label' is never used
