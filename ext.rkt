@@ -15,7 +15,9 @@
    track-binding-proc
    track-struct-usage-proc
    push-scope-proc
-   pop-scope-proc))
+   pop-scope-proc
+   save-proc
+   undo-proc))
 
 (define current-reviewer
   (make-parameter #f))
@@ -40,7 +42,9 @@
   {track-binding reviewer-track-binding-proc}
   {track-struct-usage reviewer-track-struct-usage-proc}
   {push-scope reviewer-push-scope-proc}
-  {pop-scope reviewer-pop-scope-proc})
+  {pop-scope reviewer-pop-scope-proc}
+  {save reviewer-save-proc}
+  {undo reviewer-undo-proc})
 
 (module+ private
   (provide (struct-out reviewer)))

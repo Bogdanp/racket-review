@@ -1069,7 +1069,9 @@
                                     track-binding!
                                     try-track-struct-usage!
                                     push-scope!
-                                    pop-scope!)])
+                                    pop-scope!
+                                    save!
+                                    undo!)])
                      ((cdr (find-extension this-syntax)) this-syntax)))]))
 
 (define-syntax-class expression
