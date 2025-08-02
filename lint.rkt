@@ -977,12 +977,12 @@
   (pattern ([name:id e:expression] c ...+)))
 
 (define-syntax-class struct-method-definition
-  #:datum-literals (define define/generic)
+  #:datum-literals (define/generic)
   (pattern (define/generic local-id:id method-id:id)
            #:do [(track-binding! #'local-id)])
-  (pattern (define id:id e:expression)
+  (pattern (_:define-like id:id e:expression)
            #:do [(track-binding! #'id #:check-usages? #f)])
-  (pattern (define {~var hdr (function-header #t)} body-e:expression ...+)
+  (pattern (_:define-like {~var hdr (function-header #t)} body-e:expression ...+)
            #:do [(define method-name (syntax-e (cadr (syntax-e #'hdr.name))))
                  (track-binding-usage! method-name)
                  ((attribute hdr.pop-scopes!))]))
