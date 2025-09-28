@@ -498,7 +498,7 @@
   (pattern e))
 
 (define-syntax-class match-expression
-  #:datum-literals (match match-define match-lambda)
+  #:datum-literals (match match-define match-lambda match-lambda*)
   (pattern (match-define ~!
              dpat:match-pattern
              de:expression))
@@ -510,7 +510,7 @@
               ce:expression ...+
               {~do (pop-scope!)}] ...+))
 
-  (pattern (match-lambda
+  (pattern ({~or match-lambda match-lambda*}
              [{~do (push-scope!)}
               pat:match-pattern
               ce:expression ...+
