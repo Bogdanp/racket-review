@@ -684,8 +684,8 @@
 
 ;; Expressions that introduce new scopes, like rackunit's `test-case'.
 (define-syntax-class scoping-expression-id
-  #:datum-literals (delay delay/sync delay/thread test-case test-suite)
-  (pattern {~or delay delay/sync delay/thread test-case test-suite}))
+  #:datum-literals (class class* delay delay/sync delay/thread test-case test-suite)
+  (pattern {~or class class* delay delay/sync delay/thread test-case test-suite}))
 
 (define-syntax-class scoping-expression
   (pattern (id:scoping-expression-id ~!
