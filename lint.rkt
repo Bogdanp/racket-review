@@ -475,7 +475,7 @@
             (track-binding-usage! (format-binding "~a" stx))))]))
 
 (define-syntax-class match-pattern
-  #:datum-literals (_ ? and app cons else empty or not null quote quasiquote struct* unquote)
+  #:datum-literals (_ ? and app cons else empty or not null quote quasiquote struct* unquote ==)
   (pattern _)
   (pattern else
            #:do [(track-error! this-syntax "use _ instead of else in the fallthrough case of a match expression")])
@@ -483,6 +483,7 @@
            #:do [(track-error! this-syntax "use '() for match pattern instead of null or empty")])
   (pattern (? e:expression arg:match-pattern ...))
   (pattern ({~or and or} arg:match-pattern ...))
+  (pattern (== e:expression))
   (pattern (not arg:match-pattern))
   (pattern (app e:expression arg:match-pattern))
   (pattern (struct* struct-id:id ([field-id:id field-pattern:match-pattern] ...))
