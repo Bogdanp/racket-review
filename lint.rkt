@@ -528,6 +528,13 @@
            #:do [(track-warning! this-syntax "use a cond expression instead of nesting begin or let inside an if")])
 
   (pattern (if cond:expression
+               e-then:expression
+               (if else-cond:expression
+                   e-sub-then:expression
+                   e-sub-else:expression))
+           #:do [(track-warning! this-syntax "flatten this if expression into a cond expression")])
+
+  (pattern (if cond:expression
                e-then:expression)
            #:do [(track-error! this-syntax "if expressions must contain one expression for the then-branch and another for the else-branch")]))
 
