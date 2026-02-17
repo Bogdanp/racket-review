@@ -993,7 +993,8 @@
   (pattern (_:define-like {~var hdr (function-header #t)} body-e:expression ...+)
            #:do [(define method-name (syntax-e (cadr (syntax-e #'hdr.name))))
                  (track-binding-usage! method-name)
-                 ((attribute hdr.pop-scopes!))]))
+                 ((attribute hdr.pop-scopes!))])
+  (pattern e:expression))
 
 (define-syntax-class struct-definition
   #:datum-literals (serializable-struct serializable-struct/versions struct struct/contract struct++)
