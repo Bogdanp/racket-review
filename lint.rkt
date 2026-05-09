@@ -306,10 +306,10 @@
 (define (get-phase)
   (car (phase-stack)))
 
-(define (push-phase)
+(define (push-phase!)
   (phase-stack (cons (add1 (get-phase)) (phase-stack))))
 
-(define (pop-phase)
+(define (pop-phase!)
   (phase-stack (cdr (phase-stack))))
 
 (define (check-require stx mod [phase (get-phase)])
