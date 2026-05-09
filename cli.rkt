@@ -1,25 +1,26 @@
 #lang at-exp racket/base
 
 (require racket/cmdline
-         racket/format
-         raco/command-name
-         "lint.rkt"
-         "problem.rkt")
+         racket/runtime-path
+         raco/command-name)
 
-(define (report-problem p)
-  (define-values (source line column)
-    (problem-loc p))
+(define-runtime-module-path review/lint review/lint)
+(define-runtime-module-path review/problem review/problem)
 
-  (displayln (~a source ":" line ":" (add1 column) ":" (problem-level p) ":" (problem-message p))))
-
-(define filename
+(define filenames
   (command-line
    #:program (short-program+command-name)
-   #:args (filename)
-   (path->complete-path filename)))
+   #:args (filename . filenames)
+   (map path->complete-path (cons filename filenames))))
 
-(define problems (lint filename))
-(unless (null? problems)
-  (for ([p (in-list (sort problems problem<?))])
-    (report-problem p))
+(define ok?s
+  (for/list ([filename (in-list filenames)])
+    (parameterize ([current-namespace (make-base-empty-namespace)])
+      (define lint (dynamic-require review/lint 'lint))
+      (define report (dynamic-require review/problem 'report))
+      (define problems (lint filename))
+      (unless (null? problems)
+        (report problems))
+      (null? problems))))
+(unless (andmap values ok?s)
   (exit 1))
