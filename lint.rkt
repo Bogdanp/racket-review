@@ -897,9 +897,13 @@
         [t2 (in-list (cdr (syntax->datum type-stxs)))]
         [s2 (in-list (cdr (syntax-e stxs)))])
     (cond
+      [(and (eq? t2 'label)
+            (not (eq? t1 t2)))
+       (track-warning! s2 (format "require (for-label ...) should come before all others"))]
+
       [(and (eq? t2 'syntax)
             (not (eq? t1 t2)))
-       (track-warning! s2 (format "require (for-syntax ...) should come before all others"))]
+       (track-warning! s2 (format "require (for-syntax ...) should come before all others, except for-label"))]
 
       [(and (eq? t1 'relative)
             (eq? t2 'absolute))
@@ -926,10 +930,16 @@
            #:do [(check-require this-syntax (syntax->datum #'mod))]))
 
 (define-syntax-class require-spec
-  #:datum-literals (combine-in except-in for-syntax only-in prefix-in submod)
+  #:datum-literals (combine-in except-in for-label for-syntax only-in prefix-in submod)
   (pattern mod:root-module-path
            #:with t #'mod.t
            #:with s #'mod.s)
+  (pattern (for-label
+            {~do (push-phase!)}
+            e:require-spec ...
+            {~do (pop-phase!)})
+           #:with t 'label
+           #:with s "")
   (pattern (for-syntax
             {~do (push-phase!)}
             e:require-spec ...
