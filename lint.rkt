@@ -45,6 +45,7 @@
   (dependency-analysis
    (with-handlers ([exn:fail?
                     (lambda (e)
+                      #;
                       ((error-display-handler)
                        (format "lint: ~a" (exn-message e))
                        e)
