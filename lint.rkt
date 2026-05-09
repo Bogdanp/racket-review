@@ -320,7 +320,7 @@
         [`(drop ,(== mod) ,(== phase)) #f]
         [_ #t])))
   (unless used?
-    (track-warning! stx "potentially unused require")))
+    (track-warning! stx (format "potentially unused require at phase ~a" phase))))
 
 
 ;; provide ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

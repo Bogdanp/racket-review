@@ -1,3 +1,5 @@
+/imports.rkt:3:22:warning:potentially unused require at phase 1
+/imports.rkt:4:22:warning:potentially unused require at phase 1
 /imports.rkt:4:22:warning:prefer syntax/parse/pre if possible
-/imports.rkt:5:10:warning:potentially unused require
+/imports.rkt:5:10:warning:potentially unused require at phase 0
 /imports.rkt:5:10:warning:prefer racket/contract/base if possible
