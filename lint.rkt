@@ -931,9 +931,9 @@
            #:with t #'mod.t
            #:with s #'mod.s)
   (pattern (for-syntax
-            {~do (push-phase)}
+            {~do (push-phase!)}
             e:require-spec ...
-            {~do (pop-phase)})
+            {~do (pop-phase!)})
            #:with t 'syntax
            #:with s "")
   (pattern (only-in spec:require-spec id ...)
