@@ -43,7 +43,12 @@
   ;; which case show-requires is not going to be able to load it. So,
   ;; ignore errors in that case.
   (dependency-analysis
-   (with-handlers ([exn:fail? (λ (_) null)])
+   (with-handlers ([exn:fail?
+                    (lambda (e)
+                      ((error-display-handler)
+                       (format "lint: ~a" (exn-message e))
+                       e)
+                      null)])
      (show-requires filename)))
   (define the-lines-to-ignore
     (lines-to-ignore filename))
