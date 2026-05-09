@@ -10,7 +10,7 @@ jobs:
       with:
         variant: 'CS'
         version: '9.1'
-    - run: raco pkg install --name review
+    - run: raco pkg install --name --auto review
     - run: racket run-tests.rkt
       env:
         BATCH: x
