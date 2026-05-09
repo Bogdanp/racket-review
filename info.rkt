@@ -4,9 +4,12 @@
 (define version "0.2")
 (define collection "review")
 
-(define deps '("base"))
-(define build-deps '("base"
-                     "at-exp-lib"))
+(define deps
+  '("base"
+    "macro-debugger-text-lib"))
+(define build-deps
+  '("base"
+    "at-exp-lib"))
 
 (define compile-omit-paths '("tests/lint"))
 (define test-omit-paths 'all)

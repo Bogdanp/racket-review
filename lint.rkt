@@ -2,7 +2,8 @@
 
 #|review: ignore|#
 
-(require racket/contract/base
+(require macro-debugger/analysis/check-requires
+         racket/contract/base
          racket/contract/region
          racket/format
          racket/function
@@ -38,6 +39,12 @@
 
 (define/contract (lint filename)
   (-> path-string? (listof problem?))
+  ;; An editor might call lint with a temporary copy of the module, in
+  ;; which case show-requires is not going to be able to load it. So,
+  ;; ignore errors in that case.
+  (dependency-analysis
+   (with-handlers ([exn:fail? (λ (_) null)])
+     (show-requires filename)))
   (define the-lines-to-ignore
     (lines-to-ignore filename))
   (with-handlers ([exn:fail?
@@ -285,6 +292,35 @@
   (current-scope (savepoint-scope (current-savepoint)))
   (current-punted-bindings (savepoint-punts (current-savepoint)))
   (current-problem-list (savepoint-problems (current-savepoint))))
+
+
+;; require ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define dependency-analysis
+  (make-parameter null))
+
+(define phase-stack
+  (make-parameter
+   (list 0)))
+
+(define (get-phase)
+  (car (phase-stack)))
+
+(define (push-phase)
+  (phase-stack (cons (add1 (get-phase)) (phase-stack))))
+
+(define (pop-phase)
+  (phase-stack (cdr (phase-stack))))
+
+(define (check-require stx mod [phase (get-phase)])
+  (define used?
+    (for/and ([e (in-list (dependency-analysis))])
+      (match e
+        [`(keep ,(== mod) ,(== phase)) #t]
+        [`(drop ,(== mod) ,(== phase)) #f]
+        [_ #t])))
+  (unless used?
+    (track-warning! stx "potentially unused require")))
 
 
 ;; provide ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -882,17 +918,22 @@
                    [(racket/contract)
                     (track-warning! #'mod "prefer racket/contract/base if possible")]
                    [(syntax/parse)
-                    (track-warning! #'mod "prefer syntax/parse/pre if possible")])])
+                    (track-warning! #'mod "prefer syntax/parse/pre if possible")])
+                 (check-require this-syntax mod-sym)])
   (pattern mod:string
            #:with t 'relative
-           #:with s #'mod))
+           #:with s #'mod
+           #:do [(check-require this-syntax (syntax->datum #'mod))]))
 
 (define-syntax-class require-spec
   #:datum-literals (combine-in except-in for-syntax only-in prefix-in submod)
   (pattern mod:root-module-path
            #:with t #'mod.t
            #:with s #'mod.s)
-  (pattern (for-syntax e:require-spec ...)
+  (pattern (for-syntax
+            {~do (push-phase)}
+            e:require-spec ...
+            {~do (pop-phase)})
            #:with t 'syntax
            #:with s "")
   (pattern (only-in spec:require-spec id ...)

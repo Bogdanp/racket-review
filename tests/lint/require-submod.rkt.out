@@ -1,1 +1,2 @@
+/require-submod.rkt:3:10:warning:potentially unused require
 /require-submod.rkt:4:10:warning:require "koyo/console" should come before "koyo/database"
