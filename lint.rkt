@@ -9,6 +9,7 @@
          racket/function
          racket/list
          racket/match
+         racket/path
          racket/runtime-path
          racket/string
          racket/syntax
@@ -40,17 +41,24 @@
 (define/contract (lint filename)
   (-> path-string? (listof problem?))
   ;; An editor might call lint with a temporary copy of the module, in
-  ;; which case show-requires is not going to be able to load it. So,
-  ;; ignore errors in that case.
+  ;; which case show-requires is not going to be able to load it if it
+  ;; has relative imports. When that happens, retry with the module path
+  ;; rebased on the current directory. The analysis will be potentially
+  ;; outdated, but better than nothing.
   (dependency-analysis
-   (with-handlers ([exn:fail?
-                    (lambda (e)
-                      #;
-                      ((error-display-handler)
-                       (format "lint: ~a" (exn-message e))
-                       e)
-                      null)])
-     (show-requires filename)))
+   (let loop ([filename filename] [gas 1])
+     (with-handlers ([(lambda (e)
+                        (and (exn:fail? e)
+                             (regexp-match? #rx"syntax:missing-module" (exn-message e))
+                             (positive? gas)))
+                      (lambda (_)
+                        (loop
+                         (build-path
+                          (current-directory)
+                          (file-name-from-path filename))
+                         (sub1 gas)))]
+                     [exn:fail? (λ (_) null)])
+       (show-requires filename))))
   (define the-lines-to-ignore
     (lines-to-ignore filename))
   (with-handlers ([exn:fail?
