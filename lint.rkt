@@ -1008,10 +1008,15 @@
   (pattern (contract-out
             ~!
             {~do (push-scope!)} ;; push a scope here so bindings are punted on
-            {~or* [{~optional struct} name:id e:expression]
-                  [rename name:id provided-name:id e:expression]} ...)
+            {~or* [struct {~or name:id (name:id parent-name:id)}
+                    ([_field-id:id _ctc-e:expression] ...)
+                    {~optional #:omit-constructor}]
+                  [rename name:id _provided-name:id e:expression]
+                  [name:id e:expression]} ...)
            #:do [(for-each track-provided! (syntax-e #'(name ...)))
                  (for-each track-related-provided! (syntax-e #'(name ...)))
+                 (for ([parent-name-stx (in-list (syntax-e #'{~? (parent-name ...) ()}))])
+                   (track-binding-usage! parent-name-stx))
                  (pop-scope!)])
 
   (pattern (rename-out ~! [to-rename-id:id renamed-id:provide-renamed-id] ...)
