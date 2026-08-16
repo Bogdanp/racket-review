@@ -1,0 +1,3 @@
+/with-handlers.rkt:3:10:warning:identifier 'foo' is never used
+/with-handlers.rkt:4:11:warning:identifier 'y' is never used
+/with-handlers.rkt:6:13:warning:identifier 'y' shadows an earlier binding

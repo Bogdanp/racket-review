@@ -751,6 +751,14 @@
              e:expression ...
              (~do (pop-scope!)))))
 
+(define-syntax-class handler-expression
+  #:datum-literals (with-handlers with-handlers*)
+  (pattern ({~or with-handlers with-handlers*} ~!
+            ([_predicate-expr:expression _handler-expression:expression] ...+)
+            {~do (push-scope!)}
+            _e:expression ...
+            {~do (pop-scope!)})))
+
 (define-syntax-class function-argument
   #:commit
   (pattern arg:define-identifier)
@@ -1165,6 +1173,7 @@
   (pattern l:let-expression)
   (pattern f:for-expression)
   (pattern s:scoping-expression)
+  (pattern h:handler-expression)
   (pattern c:contract-arrow-expression)
   (pattern a:application-expression)
   (pattern I:identifier-expression)
